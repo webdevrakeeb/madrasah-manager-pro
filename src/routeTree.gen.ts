@@ -9,38 +9,195 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedDashRouteImport } from './routes/_authenticated/_dash'
+import { Route as AuthenticatedDashTwoRouteImport } from './routes/_authenticated/_dash/two'
+import { Route as AuthenticatedDashThreeRouteImport } from './routes/_authenticated/_dash/three'
+import { Route as AuthenticatedDashTeachersRouteImport } from './routes/_authenticated/_dash/teachers'
+import { Route as AuthenticatedDashPlayRouteImport } from './routes/_authenticated/_dash/play'
+import { Route as AuthenticatedDashOverviewRouteImport } from './routes/_authenticated/_dash/overview'
+import { Route as AuthenticatedDashOneRouteImport } from './routes/_authenticated/_dash/one'
+import { Route as AuthenticatedDashNurseryRouteImport } from './routes/_authenticated/_dash/nursery'
+import { Route as AuthenticatedDashHifzRouteImport } from './routes/_authenticated/_dash/hifz'
+import { Route as AuthenticatedDashFourRouteImport } from './routes/_authenticated/_dash/four'
 
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedDashRoute = AuthenticatedDashRouteImport.update({
+  id: '/_dash',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashTwoRoute = AuthenticatedDashTwoRouteImport.update({
+  id: '/two',
+  path: '/two',
+  getParentRoute: () => AuthenticatedDashRoute,
+} as any)
+const AuthenticatedDashThreeRoute = AuthenticatedDashThreeRouteImport.update({
+  id: '/three',
+  path: '/three',
+  getParentRoute: () => AuthenticatedDashRoute,
+} as any)
+const AuthenticatedDashTeachersRoute =
+  AuthenticatedDashTeachersRouteImport.update({
+    id: '/teachers',
+    path: '/teachers',
+    getParentRoute: () => AuthenticatedDashRoute,
+  } as any)
+const AuthenticatedDashPlayRoute = AuthenticatedDashPlayRouteImport.update({
+  id: '/play',
+  path: '/play',
+  getParentRoute: () => AuthenticatedDashRoute,
+} as any)
+const AuthenticatedDashOverviewRoute =
+  AuthenticatedDashOverviewRouteImport.update({
+    id: '/overview',
+    path: '/overview',
+    getParentRoute: () => AuthenticatedDashRoute,
+  } as any)
+const AuthenticatedDashOneRoute = AuthenticatedDashOneRouteImport.update({
+  id: '/one',
+  path: '/one',
+  getParentRoute: () => AuthenticatedDashRoute,
+} as any)
+const AuthenticatedDashNurseryRoute =
+  AuthenticatedDashNurseryRouteImport.update({
+    id: '/nursery',
+    path: '/nursery',
+    getParentRoute: () => AuthenticatedDashRoute,
+  } as any)
+const AuthenticatedDashHifzRoute = AuthenticatedDashHifzRouteImport.update({
+  id: '/hifz',
+  path: '/hifz',
+  getParentRoute: () => AuthenticatedDashRoute,
+} as any)
+const AuthenticatedDashFourRoute = AuthenticatedDashFourRouteImport.update({
+  id: '/four',
+  path: '/four',
+  getParentRoute: () => AuthenticatedDashRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/four': typeof AuthenticatedDashFourRoute
+  '/hifz': typeof AuthenticatedDashHifzRoute
+  '/nursery': typeof AuthenticatedDashNurseryRoute
+  '/one': typeof AuthenticatedDashOneRoute
+  '/overview': typeof AuthenticatedDashOverviewRoute
+  '/play': typeof AuthenticatedDashPlayRoute
+  '/teachers': typeof AuthenticatedDashTeachersRoute
+  '/three': typeof AuthenticatedDashThreeRoute
+  '/two': typeof AuthenticatedDashTwoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/four': typeof AuthenticatedDashFourRoute
+  '/hifz': typeof AuthenticatedDashHifzRoute
+  '/nursery': typeof AuthenticatedDashNurseryRoute
+  '/one': typeof AuthenticatedDashOneRoute
+  '/overview': typeof AuthenticatedDashOverviewRoute
+  '/play': typeof AuthenticatedDashPlayRoute
+  '/teachers': typeof AuthenticatedDashTeachersRoute
+  '/three': typeof AuthenticatedDashThreeRoute
+  '/two': typeof AuthenticatedDashTwoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/_dash': typeof AuthenticatedDashRouteWithChildren
+  '/_authenticated/_dash/four': typeof AuthenticatedDashFourRoute
+  '/_authenticated/_dash/hifz': typeof AuthenticatedDashHifzRoute
+  '/_authenticated/_dash/nursery': typeof AuthenticatedDashNurseryRoute
+  '/_authenticated/_dash/one': typeof AuthenticatedDashOneRoute
+  '/_authenticated/_dash/overview': typeof AuthenticatedDashOverviewRoute
+  '/_authenticated/_dash/play': typeof AuthenticatedDashPlayRoute
+  '/_authenticated/_dash/teachers': typeof AuthenticatedDashTeachersRoute
+  '/_authenticated/_dash/three': typeof AuthenticatedDashThreeRoute
+  '/_authenticated/_dash/two': typeof AuthenticatedDashTwoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/four'
+    | '/hifz'
+    | '/nursery'
+    | '/one'
+    | '/overview'
+    | '/play'
+    | '/teachers'
+    | '/three'
+    | '/two'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/four'
+    | '/hifz'
+    | '/nursery'
+    | '/one'
+    | '/overview'
+    | '/play'
+    | '/teachers'
+    | '/three'
+    | '/two'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/_dash'
+    | '/_authenticated/_dash/four'
+    | '/_authenticated/_dash/hifz'
+    | '/_authenticated/_dash/nursery'
+    | '/_authenticated/_dash/one'
+    | '/_authenticated/_dash/overview'
+    | '/_authenticated/_dash/play'
+    | '/_authenticated/_dash/teachers'
+    | '/_authenticated/_dash/three'
+    | '/_authenticated/_dash/two'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +205,121 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/_dash': {
+      id: '/_authenticated/_dash'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedDashRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/_dash/two': {
+      id: '/_authenticated/_dash/two'
+      path: '/two'
+      fullPath: '/two'
+      preLoaderRoute: typeof AuthenticatedDashTwoRouteImport
+      parentRoute: typeof AuthenticatedDashRoute
+    }
+    '/_authenticated/_dash/three': {
+      id: '/_authenticated/_dash/three'
+      path: '/three'
+      fullPath: '/three'
+      preLoaderRoute: typeof AuthenticatedDashThreeRouteImport
+      parentRoute: typeof AuthenticatedDashRoute
+    }
+    '/_authenticated/_dash/teachers': {
+      id: '/_authenticated/_dash/teachers'
+      path: '/teachers'
+      fullPath: '/teachers'
+      preLoaderRoute: typeof AuthenticatedDashTeachersRouteImport
+      parentRoute: typeof AuthenticatedDashRoute
+    }
+    '/_authenticated/_dash/play': {
+      id: '/_authenticated/_dash/play'
+      path: '/play'
+      fullPath: '/play'
+      preLoaderRoute: typeof AuthenticatedDashPlayRouteImport
+      parentRoute: typeof AuthenticatedDashRoute
+    }
+    '/_authenticated/_dash/overview': {
+      id: '/_authenticated/_dash/overview'
+      path: '/overview'
+      fullPath: '/overview'
+      preLoaderRoute: typeof AuthenticatedDashOverviewRouteImport
+      parentRoute: typeof AuthenticatedDashRoute
+    }
+    '/_authenticated/_dash/one': {
+      id: '/_authenticated/_dash/one'
+      path: '/one'
+      fullPath: '/one'
+      preLoaderRoute: typeof AuthenticatedDashOneRouteImport
+      parentRoute: typeof AuthenticatedDashRoute
+    }
+    '/_authenticated/_dash/nursery': {
+      id: '/_authenticated/_dash/nursery'
+      path: '/nursery'
+      fullPath: '/nursery'
+      preLoaderRoute: typeof AuthenticatedDashNurseryRouteImport
+      parentRoute: typeof AuthenticatedDashRoute
+    }
+    '/_authenticated/_dash/hifz': {
+      id: '/_authenticated/_dash/hifz'
+      path: '/hifz'
+      fullPath: '/hifz'
+      preLoaderRoute: typeof AuthenticatedDashHifzRouteImport
+      parentRoute: typeof AuthenticatedDashRoute
+    }
+    '/_authenticated/_dash/four': {
+      id: '/_authenticated/_dash/four'
+      path: '/four'
+      fullPath: '/four'
+      preLoaderRoute: typeof AuthenticatedDashFourRouteImport
+      parentRoute: typeof AuthenticatedDashRoute
+    }
   }
 }
 
+interface AuthenticatedDashRouteChildren {
+  AuthenticatedDashFourRoute: typeof AuthenticatedDashFourRoute
+  AuthenticatedDashHifzRoute: typeof AuthenticatedDashHifzRoute
+  AuthenticatedDashNurseryRoute: typeof AuthenticatedDashNurseryRoute
+  AuthenticatedDashOneRoute: typeof AuthenticatedDashOneRoute
+  AuthenticatedDashOverviewRoute: typeof AuthenticatedDashOverviewRoute
+  AuthenticatedDashPlayRoute: typeof AuthenticatedDashPlayRoute
+  AuthenticatedDashTeachersRoute: typeof AuthenticatedDashTeachersRoute
+  AuthenticatedDashThreeRoute: typeof AuthenticatedDashThreeRoute
+  AuthenticatedDashTwoRoute: typeof AuthenticatedDashTwoRoute
+}
+
+const AuthenticatedDashRouteChildren: AuthenticatedDashRouteChildren = {
+  AuthenticatedDashFourRoute: AuthenticatedDashFourRoute,
+  AuthenticatedDashHifzRoute: AuthenticatedDashHifzRoute,
+  AuthenticatedDashNurseryRoute: AuthenticatedDashNurseryRoute,
+  AuthenticatedDashOneRoute: AuthenticatedDashOneRoute,
+  AuthenticatedDashOverviewRoute: AuthenticatedDashOverviewRoute,
+  AuthenticatedDashPlayRoute: AuthenticatedDashPlayRoute,
+  AuthenticatedDashTeachersRoute: AuthenticatedDashTeachersRoute,
+  AuthenticatedDashThreeRoute: AuthenticatedDashThreeRoute,
+  AuthenticatedDashTwoRoute: AuthenticatedDashTwoRoute,
+}
+
+const AuthenticatedDashRouteWithChildren =
+  AuthenticatedDashRoute._addFileChildren(AuthenticatedDashRouteChildren)
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDashRoute: typeof AuthenticatedDashRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDashRoute: AuthenticatedDashRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
