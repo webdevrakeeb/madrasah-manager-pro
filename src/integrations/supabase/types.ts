@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      student_fee_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+          paid_at: string
+          period_month: number
+          period_year: number
+          student_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          paid_at?: string
+          period_month: number
+          period_year: number
+          student_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          paid_at?: string
+          period_month?: number
+          period_year?: number
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_fee_payments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           birth_certificate_no: string | null
@@ -28,6 +72,7 @@ export type Database = {
           gender: string | null
           guardian_mobile: string | null
           id: string
+          monthly_fee: number
           mother_mobile: string | null
           mother_name_bn: string | null
           mother_name_en: string | null
@@ -53,6 +98,7 @@ export type Database = {
           gender?: string | null
           guardian_mobile?: string | null
           id?: string
+          monthly_fee?: number
           mother_mobile?: string | null
           mother_name_bn?: string | null
           mother_name_en?: string | null
@@ -78,6 +124,7 @@ export type Database = {
           gender?: string | null
           guardian_mobile?: string | null
           id?: string
+          monthly_fee?: number
           mother_mobile?: string | null
           mother_name_bn?: string | null
           mother_name_en?: string | null
@@ -88,6 +135,101 @@ export type Database = {
           photo_url?: string | null
           present_address?: string | null
           religion?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      teacher_salary_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+          paid_at: string
+          period_month: number
+          period_year: number
+          teacher_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          paid_at?: string
+          period_month: number
+          period_year: number
+          teacher_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          paid_at?: string
+          period_month?: number
+          period_year?: number
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_salary_payments_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teachers: {
+        Row: {
+          address: string | null
+          created_at: string
+          created_by: string | null
+          designation: string | null
+          email: string | null
+          father_name: string | null
+          id: string
+          joining_date: string | null
+          mobile: string | null
+          monthly_salary: number
+          mother_name: string | null
+          name: string
+          photo_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          created_by?: string | null
+          designation?: string | null
+          email?: string | null
+          father_name?: string | null
+          id?: string
+          joining_date?: string | null
+          mobile?: string | null
+          monthly_salary?: number
+          mother_name?: string | null
+          name: string
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          created_by?: string | null
+          designation?: string | null
+          email?: string | null
+          father_name?: string | null
+          id?: string
+          joining_date?: string | null
+          mobile?: string | null
+          monthly_salary?: number
+          mother_name?: string | null
+          name?: string
+          photo_url?: string | null
           updated_at?: string
         }
         Relationships: []
