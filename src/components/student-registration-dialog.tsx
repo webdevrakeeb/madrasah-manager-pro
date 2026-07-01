@@ -45,6 +45,7 @@ const schema = z.object({
   nationality: z.string().optional(),
   present_address: z.string().trim().max(500).optional().or(z.literal("")),
   permanent_address: z.string().trim().max(500).optional().or(z.literal("")),
+  monthly_fee: z.coerce.number().min(0, "Must be 0 or more").max(1000000),
   confirm: z.literal(true, { errorMap: () => ({ message: "Please confirm" }) }),
 });
 
@@ -72,6 +73,7 @@ export function StudentRegistrationDialog({ defaultClass, trigger, onCreated }: 
       father_mobile: "", mother_mobile: "", guardian_mobile: "",
       present_address: "", permanent_address: "",
       class: defaultClass ?? "play",
+      monthly_fee: 0,
       confirm: false as unknown as true,
     },
   });
@@ -121,6 +123,7 @@ export function StudentRegistrationDialog({ defaultClass, trigger, onCreated }: 
         nationality: values.nationality || null,
         present_address: values.present_address || null,
         permanent_address: values.permanent_address || null,
+        monthly_fee: values.monthly_fee,
         photo_url,
       });
       if (error) throw error;
@@ -223,6 +226,10 @@ export function StudentRegistrationDialog({ defaultClass, trigger, onCreated }: 
                 placeholder="Select"
                 options={CLASS_OPTIONS.map((c) => ({ value: c.value, en: c.en, bn: c.bn }))}
               />
+            </Field>
+
+            <Field label="Monthly Fee (৳) / মাসিক ফি" error={form.formState.errors.monthly_fee?.message} hint="Set at admission; used for monthly fee collection">
+              <Input type="number" min={0} step="1" {...form.register("monthly_fee")} />
             </Field>
           </Section>
 

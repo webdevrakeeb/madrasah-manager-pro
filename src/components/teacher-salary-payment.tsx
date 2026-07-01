@@ -1,0 +1,257 @@
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
+import { MONTHS, currentYear, monthLabel, yearOptions } from "@/lib/months";
+import { format } from "date-fns";
+import { Check, CircleDashed, BadgeDollarSign } from "lucide-react";
+
+interface TeacherLite {
+  id: string;
+  name: string;
+  designation: string | null;
+  monthly_salary: number;
+}
+
+interface Payment {
+  id: string;
+  period_year: number;
+  period_month: number;
+  amount: number;
+  paid_at: string;
+  note: string | null;
+}
+
+export function TeacherSalaryPayment() {
+  const [teachers, setTeachers] = useState<TeacherLite[]>([]);
+  const [selectedId, setSelectedId] = useState<string>("");
+  const [year, setYear] = useState<number>(currentYear());
+  const [month, setMonth] = useState<number>(new Date().getMonth() + 1);
+  const [amount, setAmount] = useState<string>("");
+  const [note, setNote] = useState<string>("");
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  const selected = useMemo(() => teachers.find((t) => t.id === selectedId), [teachers, selectedId]);
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase
+        .from("teachers")
+        .select("id,name,designation,monthly_salary")
+        .order("name");
+      if (error) return toast.error(error.message);
+      setTeachers((data ?? []) as TeacherLite[]);
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!selected) { setPayments([]); setAmount(""); return; }
+    setAmount(String(selected.monthly_salary ?? 0));
+    loadPayments(selected.id);
+  }, [selected]);
+
+  async function loadPayments(teacherId: string) {
+    const { data, error } = await supabase
+      .from("teacher_salary_payments")
+      .select("id,period_year,period_month,amount,paid_at,note")
+      .eq("teacher_id", teacherId)
+      .order("period_year", { ascending: false })
+      .order("period_month", { ascending: false });
+    if (error) return toast.error(error.message);
+    setPayments((data ?? []) as Payment[]);
+  }
+
+  const paidForYear = useMemo(() => {
+    const set = new Set<number>();
+    payments.filter((p) => p.period_year === year).forEach((p) => set.add(p.period_month));
+    return set;
+  }, [payments, year]);
+
+  const alreadyPaid = paidForYear.has(month);
+
+  async function recordPayment() {
+    if (!selected) return toast.error("Select a teacher");
+    const amt = Number(amount);
+    if (isNaN(amt) || amt < 0) return toast.error("Enter a valid amount");
+    if (alreadyPaid) return toast.error("Salary for this month is already paid");
+    setSaving(true);
+    const { data: userData } = await supabase.auth.getUser();
+    const { error } = await supabase.from("teacher_salary_payments").insert({
+      teacher_id: selected.id,
+      period_year: year,
+      period_month: month,
+      amount: amt,
+      note: note || null,
+      created_by: userData.user?.id ?? null,
+    });
+    setSaving(false);
+    if (error) {
+      if (error.code === "23505") return toast.error("Salary for this month already exists");
+      return toast.error(error.message);
+    }
+    toast.success(`Recorded ${monthLabel(month).en} ${year}`);
+    setNote("");
+    loadPayments(selected.id);
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="font-display text-3xl">Teacher Salaries <span className="font-bn text-xl text-muted-foreground ml-2">শিক্ষকের বেতন</span></h2>
+        <p className="text-sm text-muted-foreground mt-1">Record monthly salary payments · <span className="font-bn">মাসিক বেতন নথিভুক্ত করুন</span></p>
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-6">
+        <Card className="p-6 lg:col-span-1 space-y-4">
+          <div className="space-y-2">
+            <Label>Teacher / শিক্ষক</Label>
+            <Select value={selectedId} onValueChange={setSelectedId}>
+              <SelectTrigger><SelectValue placeholder="Select teacher" /></SelectTrigger>
+              <SelectContent>
+                {teachers.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.name}
+                    {t.designation && <span className="text-xs text-muted-foreground ml-2">· {t.designation}</span>}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {selected && (
+            <div className="rounded-md border bg-muted/40 p-3 text-sm flex items-center gap-3">
+              <BadgeDollarSign className="size-4 text-primary" />
+              <div>
+                <div className="text-xs text-muted-foreground">Assigned monthly salary</div>
+                <div className="font-display text-lg">৳ {Number(selected.monthly_salary).toLocaleString()}</div>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Year / বছর</Label>
+              <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {yearOptions().map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Month / মাস</Label>
+              <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {MONTHS.map((m) => (
+                    <SelectItem key={m.value} value={String(m.value)}>
+                      {m.en} <span className="font-bn text-muted-foreground ml-1 text-xs">{m.bn}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Amount (৳) / পরিমাণ</Label>
+            <Input type="number" min={0} value={amount} onChange={(e) => setAmount(e.target.value)} />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Note / নোট (optional)</Label>
+            <Input value={note} onChange={(e) => setNote(e.target.value)} />
+          </div>
+
+          {selected && alreadyPaid && (
+            <div className="text-xs text-destructive">Already paid for {monthLabel(month).en} {year}</div>
+          )}
+
+          <Button className="w-full" disabled={!selected || saving || alreadyPaid} onClick={recordPayment}>
+            {saving ? "Saving…" : "Record Salary Payment"}
+          </Button>
+        </Card>
+
+        <Card className="p-6 lg:col-span-2">
+          {!selected ? (
+            <div className="p-8 text-center text-sm text-muted-foreground">Select a teacher to view salary history</div>
+          ) : (
+            <div className="space-y-6">
+              <div className="flex items-baseline justify-between gap-4">
+                <div>
+                  <div className="font-display text-lg">{selected.name}</div>
+                  <div className="text-xs text-muted-foreground">{selected.designation ?? ""}</div>
+                </div>
+                <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
+                  <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {yearOptions().map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">{year} status</div>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                  {MONTHS.map((m) => {
+                    const paid = paidForYear.has(m.value);
+                    return (
+                      <button
+                        key={m.value}
+                        onClick={() => setMonth(m.value)}
+                        className={
+                          "rounded-md border p-2 text-left text-xs transition " +
+                          (paid ? "bg-primary/10 border-primary/30 text-primary" : "bg-muted/30 hover:bg-muted/60") +
+                          (month === m.value ? " ring-2 ring-primary/40" : "")
+                        }
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{m.en.slice(0, 3)}</span>
+                          {paid ? <Check className="size-3.5" /> : <CircleDashed className="size-3.5 opacity-50" />}
+                        </div>
+                        <div className="font-bn text-[10px] opacity-70">{m.bn}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">History</div>
+                {payments.length === 0 ? (
+                  <div className="text-sm text-muted-foreground py-6 text-center">No salary payments yet</div>
+                ) : (
+                  <div className="border rounded-md divide-y">
+                    {payments.map((p) => {
+                      const ml = monthLabel(p.period_month);
+                      return (
+                        <div key={p.id} className="flex items-center justify-between px-3 py-2 text-sm">
+                          <div>
+                            <div className="font-medium">{ml.en} {p.period_year}</div>
+                            <div className="font-bn text-xs text-muted-foreground">{ml.bn} · {format(new Date(p.paid_at), "PP")}</div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {p.note && <span className="text-xs text-muted-foreground max-w-40 truncate">{p.note}</span>}
+                            <Badge variant="secondary">৳ {Number(p.amount).toLocaleString()}</Badge>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </Card>
+      </div>
+    </div>
+  );
+}

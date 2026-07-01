@@ -15,6 +15,8 @@ import {
   LogOut,
   Search,
   Menu,
+  Wallet,
+  BadgeDollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +33,9 @@ const NAV = [
   { to: "/three",    en: "Three",    bn: "তৃতীয় শ্রেণি",  icon: BookMarked },
   { to: "/four",     en: "Four",     bn: "চতুর্থ শ্রেণি",  icon: Library },
   { to: "/hifz",     en: "Hifz",     bn: "হিফজ",        icon: GraduationCap },
+  { to: "/fees",     en: "Fees",     bn: "শিক্ষার্থী ফি",   icon: Wallet },
   { to: "/teachers", en: "Teachers", bn: "শিক্ষক",       icon: Users },
+  { to: "/salaries", en: "Salaries", bn: "বেতন",         icon: BadgeDollarSign },
 ] as const;
 
 export function DashboardShell() {
