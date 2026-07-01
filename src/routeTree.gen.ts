@@ -16,12 +16,14 @@ import { Route as AuthenticatedDashRouteImport } from './routes/_authenticated/_
 import { Route as AuthenticatedDashTwoRouteImport } from './routes/_authenticated/_dash/two'
 import { Route as AuthenticatedDashThreeRouteImport } from './routes/_authenticated/_dash/three'
 import { Route as AuthenticatedDashTeachersRouteImport } from './routes/_authenticated/_dash/teachers'
+import { Route as AuthenticatedDashSalariesRouteImport } from './routes/_authenticated/_dash/salaries'
 import { Route as AuthenticatedDashPlayRouteImport } from './routes/_authenticated/_dash/play'
 import { Route as AuthenticatedDashOverviewRouteImport } from './routes/_authenticated/_dash/overview'
 import { Route as AuthenticatedDashOneRouteImport } from './routes/_authenticated/_dash/one'
 import { Route as AuthenticatedDashNurseryRouteImport } from './routes/_authenticated/_dash/nursery'
 import { Route as AuthenticatedDashHifzRouteImport } from './routes/_authenticated/_dash/hifz'
 import { Route as AuthenticatedDashFourRouteImport } from './routes/_authenticated/_dash/four'
+import { Route as AuthenticatedDashFeesRouteImport } from './routes/_authenticated/_dash/fees'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -57,6 +59,12 @@ const AuthenticatedDashTeachersRoute =
     path: '/teachers',
     getParentRoute: () => AuthenticatedDashRoute,
   } as any)
+const AuthenticatedDashSalariesRoute =
+  AuthenticatedDashSalariesRouteImport.update({
+    id: '/salaries',
+    path: '/salaries',
+    getParentRoute: () => AuthenticatedDashRoute,
+  } as any)
 const AuthenticatedDashPlayRoute = AuthenticatedDashPlayRouteImport.update({
   id: '/play',
   path: '/play',
@@ -89,16 +97,23 @@ const AuthenticatedDashFourRoute = AuthenticatedDashFourRouteImport.update({
   path: '/four',
   getParentRoute: () => AuthenticatedDashRoute,
 } as any)
+const AuthenticatedDashFeesRoute = AuthenticatedDashFeesRouteImport.update({
+  id: '/fees',
+  path: '/fees',
+  getParentRoute: () => AuthenticatedDashRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/fees': typeof AuthenticatedDashFeesRoute
   '/four': typeof AuthenticatedDashFourRoute
   '/hifz': typeof AuthenticatedDashHifzRoute
   '/nursery': typeof AuthenticatedDashNurseryRoute
   '/one': typeof AuthenticatedDashOneRoute
   '/overview': typeof AuthenticatedDashOverviewRoute
   '/play': typeof AuthenticatedDashPlayRoute
+  '/salaries': typeof AuthenticatedDashSalariesRoute
   '/teachers': typeof AuthenticatedDashTeachersRoute
   '/three': typeof AuthenticatedDashThreeRoute
   '/two': typeof AuthenticatedDashTwoRoute
@@ -106,12 +121,14 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/fees': typeof AuthenticatedDashFeesRoute
   '/four': typeof AuthenticatedDashFourRoute
   '/hifz': typeof AuthenticatedDashHifzRoute
   '/nursery': typeof AuthenticatedDashNurseryRoute
   '/one': typeof AuthenticatedDashOneRoute
   '/overview': typeof AuthenticatedDashOverviewRoute
   '/play': typeof AuthenticatedDashPlayRoute
+  '/salaries': typeof AuthenticatedDashSalariesRoute
   '/teachers': typeof AuthenticatedDashTeachersRoute
   '/three': typeof AuthenticatedDashThreeRoute
   '/two': typeof AuthenticatedDashTwoRoute
@@ -122,12 +139,14 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/_dash': typeof AuthenticatedDashRouteWithChildren
+  '/_authenticated/_dash/fees': typeof AuthenticatedDashFeesRoute
   '/_authenticated/_dash/four': typeof AuthenticatedDashFourRoute
   '/_authenticated/_dash/hifz': typeof AuthenticatedDashHifzRoute
   '/_authenticated/_dash/nursery': typeof AuthenticatedDashNurseryRoute
   '/_authenticated/_dash/one': typeof AuthenticatedDashOneRoute
   '/_authenticated/_dash/overview': typeof AuthenticatedDashOverviewRoute
   '/_authenticated/_dash/play': typeof AuthenticatedDashPlayRoute
+  '/_authenticated/_dash/salaries': typeof AuthenticatedDashSalariesRoute
   '/_authenticated/_dash/teachers': typeof AuthenticatedDashTeachersRoute
   '/_authenticated/_dash/three': typeof AuthenticatedDashThreeRoute
   '/_authenticated/_dash/two': typeof AuthenticatedDashTwoRoute
@@ -137,12 +156,14 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/fees'
     | '/four'
     | '/hifz'
     | '/nursery'
     | '/one'
     | '/overview'
     | '/play'
+    | '/salaries'
     | '/teachers'
     | '/three'
     | '/two'
@@ -150,12 +171,14 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/fees'
     | '/four'
     | '/hifz'
     | '/nursery'
     | '/one'
     | '/overview'
     | '/play'
+    | '/salaries'
     | '/teachers'
     | '/three'
     | '/two'
@@ -165,12 +188,14 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/_dash'
+    | '/_authenticated/_dash/fees'
     | '/_authenticated/_dash/four'
     | '/_authenticated/_dash/hifz'
     | '/_authenticated/_dash/nursery'
     | '/_authenticated/_dash/one'
     | '/_authenticated/_dash/overview'
     | '/_authenticated/_dash/play'
+    | '/_authenticated/_dash/salaries'
     | '/_authenticated/_dash/teachers'
     | '/_authenticated/_dash/three'
     | '/_authenticated/_dash/two'
@@ -233,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashTeachersRouteImport
       parentRoute: typeof AuthenticatedDashRoute
     }
+    '/_authenticated/_dash/salaries': {
+      id: '/_authenticated/_dash/salaries'
+      path: '/salaries'
+      fullPath: '/salaries'
+      preLoaderRoute: typeof AuthenticatedDashSalariesRouteImport
+      parentRoute: typeof AuthenticatedDashRoute
+    }
     '/_authenticated/_dash/play': {
       id: '/_authenticated/_dash/play'
       path: '/play'
@@ -275,28 +307,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashFourRouteImport
       parentRoute: typeof AuthenticatedDashRoute
     }
+    '/_authenticated/_dash/fees': {
+      id: '/_authenticated/_dash/fees'
+      path: '/fees'
+      fullPath: '/fees'
+      preLoaderRoute: typeof AuthenticatedDashFeesRouteImport
+      parentRoute: typeof AuthenticatedDashRoute
+    }
   }
 }
 
 interface AuthenticatedDashRouteChildren {
+  AuthenticatedDashFeesRoute: typeof AuthenticatedDashFeesRoute
   AuthenticatedDashFourRoute: typeof AuthenticatedDashFourRoute
   AuthenticatedDashHifzRoute: typeof AuthenticatedDashHifzRoute
   AuthenticatedDashNurseryRoute: typeof AuthenticatedDashNurseryRoute
   AuthenticatedDashOneRoute: typeof AuthenticatedDashOneRoute
   AuthenticatedDashOverviewRoute: typeof AuthenticatedDashOverviewRoute
   AuthenticatedDashPlayRoute: typeof AuthenticatedDashPlayRoute
+  AuthenticatedDashSalariesRoute: typeof AuthenticatedDashSalariesRoute
   AuthenticatedDashTeachersRoute: typeof AuthenticatedDashTeachersRoute
   AuthenticatedDashThreeRoute: typeof AuthenticatedDashThreeRoute
   AuthenticatedDashTwoRoute: typeof AuthenticatedDashTwoRoute
 }
 
 const AuthenticatedDashRouteChildren: AuthenticatedDashRouteChildren = {
+  AuthenticatedDashFeesRoute: AuthenticatedDashFeesRoute,
   AuthenticatedDashFourRoute: AuthenticatedDashFourRoute,
   AuthenticatedDashHifzRoute: AuthenticatedDashHifzRoute,
   AuthenticatedDashNurseryRoute: AuthenticatedDashNurseryRoute,
   AuthenticatedDashOneRoute: AuthenticatedDashOneRoute,
   AuthenticatedDashOverviewRoute: AuthenticatedDashOverviewRoute,
   AuthenticatedDashPlayRoute: AuthenticatedDashPlayRoute,
+  AuthenticatedDashSalariesRoute: AuthenticatedDashSalariesRoute,
   AuthenticatedDashTeachersRoute: AuthenticatedDashTeachersRoute,
   AuthenticatedDashThreeRoute: AuthenticatedDashThreeRoute,
   AuthenticatedDashTwoRoute: AuthenticatedDashTwoRoute,

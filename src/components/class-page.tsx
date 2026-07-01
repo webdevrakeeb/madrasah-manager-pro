@@ -19,6 +19,7 @@ interface Student {
   date_of_birth: string | null;
   photo_url: string | null;
   class: ClassValue;
+  monthly_fee: number;
   created_at: string;
 }
 
@@ -32,7 +33,7 @@ export function ClassPage({ classValue }: { classValue: ClassValue }) {
     setLoading(true);
     const { data, error } = await supabase
       .from("students")
-      .select("id,name_en,name_bn,father_name_en,guardian_mobile,date_of_birth,photo_url,class,created_at")
+      .select("id,name_en,name_bn,father_name_en,guardian_mobile,date_of_birth,photo_url,class,monthly_fee,created_at")
       .eq("class", classValue)
       .order("created_at", { ascending: false });
     if (error) { toast.error(error.message); setLoading(false); return; }
@@ -112,6 +113,7 @@ export function ClassPage({ classValue }: { classValue: ClassValue }) {
                 <TableHead>Father / পিতা</TableHead>
                 <TableHead>Guardian Mobile / অভিভাবক</TableHead>
                 <TableHead>DOB / জন্ম</TableHead>
+                <TableHead>Fee (৳) / ফি</TableHead>
                 <TableHead className="w-16"></TableHead>
               </TableRow>
             </TableHeader>
@@ -136,6 +138,7 @@ export function ClassPage({ classValue }: { classValue: ClassValue }) {
                   <TableCell className="text-sm">
                     {s.date_of_birth ? format(new Date(s.date_of_birth), "PP") : "—"}
                   </TableCell>
+                  <TableCell className="text-sm font-medium">{Number(s.monthly_fee ?? 0).toLocaleString()}</TableCell>
                   <TableCell>
                     <Button variant="ghost" size="icon" onClick={() => remove(s.id, s.photo_url)}>
                       <Trash2 className="size-4 text-destructive" />
