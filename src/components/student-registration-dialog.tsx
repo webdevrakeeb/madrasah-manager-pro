@@ -227,6 +227,10 @@ export function StudentRegistrationDialog({ defaultClass, trigger, onCreated }: 
                 options={CLASS_OPTIONS.map((c) => ({ value: c.value, en: c.en, bn: c.bn }))}
               />
             </Field>
+
+            <Field label="Monthly Fee (৳) / মাসিক ফি" error={form.formState.errors.monthly_fee?.message} hint="Set at admission; used for monthly fee collection">
+              <Input type="number" min={0} step="1" {...form.register("monthly_fee")} />
+            </Field>
           </Section>
 
           {/* Parents */}
