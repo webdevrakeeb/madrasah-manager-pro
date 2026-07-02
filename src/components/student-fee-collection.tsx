@@ -33,6 +33,7 @@ interface Payment {
 
 export function StudentFeeCollection() {
   const [students, setStudents] = useState<StudentLite[]>([]);
+  const [classFilter, setClassFilter] = useState<string>("");
   const [selectedId, setSelectedId] = useState<string>("");
   const [year, setYear] = useState<number>(currentYear());
   const [month, setMonth] = useState<number>(new Date().getMonth() + 1);
@@ -42,6 +43,10 @@ export function StudentFeeCollection() {
   const [saving, setSaving] = useState(false);
 
   const selected = useMemo(() => students.find((s) => s.id === selectedId), [students, selectedId]);
+  const filteredStudents = useMemo(
+    () => (classFilter ? students.filter((s) => s.class === classFilter) : []),
+    [students, classFilter],
+  );
 
   useEffect(() => {
     (async () => {
@@ -53,6 +58,13 @@ export function StudentFeeCollection() {
       setStudents((data ?? []) as StudentLite[]);
     })();
   }, []);
+
+  // Clear selected student if class filter changes and no longer matches
+  useEffect(() => {
+    if (selected && classFilter && selected.class !== classFilter) {
+      setSelectedId("");
+    }
+  }, [classFilter, selected]);
 
   useEffect(() => {
     if (!selected) { setPayments([]); setAmount(""); return; }
