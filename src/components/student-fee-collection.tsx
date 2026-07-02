@@ -127,22 +127,40 @@ export function StudentFeeCollection() {
         {/* Collect form */}
         <Card className="p-6 lg:col-span-1 space-y-4">
           <div className="space-y-2">
-            <Label>Student / শিক্ষার্থী</Label>
-            <Select value={selectedId} onValueChange={setSelectedId}>
-              <SelectTrigger><SelectValue placeholder="Select student" /></SelectTrigger>
+            <Label>Class / শ্রেণি</Label>
+            <Select value={classFilter} onValueChange={(v) => setClassFilter(v)}>
+              <SelectTrigger><SelectValue placeholder="Select class first" /></SelectTrigger>
               <SelectContent>
-                {students.map((s) => {
-                  const cls = CLASS_OPTIONS.find((c) => c.value === s.class);
-                  return (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.name_en} <span className="font-bn text-muted-foreground ml-1 text-xs">{s.name_bn}</span>
-                      <span className="text-xs text-muted-foreground ml-2">· {cls?.en}</span>
-                    </SelectItem>
-                  );
-                })}
+                {CLASS_OPTIONS.map((c) => (
+                  <SelectItem key={c.value} value={c.value}>
+                    {c.en} <span className="font-bn text-muted-foreground ml-1 text-xs">{c.bn}</span>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
+
+          <div className="space-y-2">
+            <Label>Student / শিক্ষার্থী</Label>
+            <Select value={selectedId} onValueChange={setSelectedId} disabled={!classFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder={classFilter ? (filteredStudents.length ? "Select student" : "No students in this class") : "Select class first"} />
+              </SelectTrigger>
+              <SelectContent>
+                {filteredStudents.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name_en} <span className="font-bn text-muted-foreground ml-1 text-xs">{s.name_bn}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {classFilter && (
+              <p className="text-xs text-muted-foreground">
+                {filteredStudents.length} student{filteredStudents.length === 1 ? "" : "s"} in this class
+              </p>
+            )}
+          </div>
+
 
           {selected && (
             <div className="rounded-md border bg-muted/40 p-3 text-sm flex items-center gap-3">
