@@ -213,6 +213,7 @@ export function StudentRegistrationDialog({
       } else {
         payload.photo_url = photo_url ?? null;
         const { error } = await supabase.from("students").insert(payload as never);
+        void error;
         if (error) throw error;
         toast.success("Student registered successfully");
       }
