@@ -177,7 +177,7 @@ export function StudentRegistrationDialog({
         photo_url = up.data.path;
       }
 
-      const payload: Record<string, unknown> = {
+      const payload = {
         name_bn: values.name_bn,
         name_en: values.name_en,
         mother_name_bn: values.mother_name_bn || null,
@@ -200,20 +200,15 @@ export function StudentRegistrationDialog({
       };
 
       if (isEdit && student) {
-        if (photo_url !== undefined) {
-          payload.photo_url = photo_url;
-        }
-        const { error } = await supabase.from("students").update(payload).eq("id", student.id);
+        const updatePayload = photo_url !== undefined ? { ...payload, photo_url } : payload;
+        const { error } = await supabase.from("students").update(updatePayload).eq("id", student.id);
         if (error) throw error;
-        // Remove old photo if replaced
         if (photo_url && student.photo_url && student.photo_url !== photo_url) {
           await supabase.storage.from("student-photos").remove([student.photo_url]);
         }
         toast.success("Student updated");
       } else {
-        payload.photo_url = photo_url ?? null;
-        const { error } = await supabase.from("students").insert(payload as never);
-        void error;
+        const { error } = await supabase.from("students").insert({ ...payload, photo_url: photo_url ?? null });
         if (error) throw error;
         toast.success("Student registered successfully");
       }
