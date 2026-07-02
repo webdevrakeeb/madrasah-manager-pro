@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { CalendarIcon, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -51,36 +51,109 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+export interface StudentEditData {
+  id: string;
+  name_bn: string;
+  name_en: string;
+  mother_name_bn?: string | null;
+  mother_name_en?: string | null;
+  father_name_bn?: string | null;
+  father_name_en?: string | null;
+  date_of_birth?: string | null;
+  birth_certificate_no?: string | null;
+  father_mobile?: string | null;
+  mother_mobile?: string | null;
+  guardian_mobile?: string | null;
+  class: ClassValue;
+  gender?: string | null;
+  religion?: string | null;
+  blood_group?: string | null;
+  nationality?: string | null;
+  present_address?: string | null;
+  permanent_address?: string | null;
+  monthly_fee: number;
+  photo_url?: string | null;
+}
+
 interface Props {
   defaultClass?: ClassValue;
   trigger?: React.ReactNode;
   onCreated?: () => void;
+  student?: StudentEditData | null;
+  open?: boolean;
+  onOpenChange?: (o: boolean) => void;
 }
 
-export function StudentRegistrationDialog({ defaultClass, trigger, onCreated }: Props) {
-  const [open, setOpen] = useState(false);
+export function StudentRegistrationDialog({
+  defaultClass, trigger, onCreated, student, open: openProp, onOpenChange,
+}: Props) {
+  const isEdit = !!student;
+  const [openInternal, setOpenInternal] = useState(false);
+  const open = openProp ?? openInternal;
+  const setOpen = (v: boolean) => { onOpenChange ? onOpenChange(v) : setOpenInternal(v); };
+
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const emptyDefaults: FormValues = {
+    name_bn: "", name_en: "",
+    mother_name_bn: "", mother_name_en: "",
+    father_name_bn: "", father_name_en: "",
+    birth_certificate_no: "",
+    father_mobile: "", mother_mobile: "", guardian_mobile: "",
+    present_address: "", permanent_address: "",
+    class: defaultClass ?? "play",
+    gender: "", religion: "", blood_group: "", nationality: "",
+    monthly_fee: 0,
+    date_of_birth: undefined,
+    confirm: (isEdit ? true : false) as unknown as true,
+  };
+
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      name_bn: "", name_en: "",
-      mother_name_bn: "", mother_name_en: "",
-      father_name_bn: "", father_name_en: "",
-      birth_certificate_no: "",
-      father_mobile: "", mother_mobile: "", guardian_mobile: "",
-      present_address: "", permanent_address: "",
-      class: defaultClass ?? "play",
-      monthly_fee: 0,
-      confirm: false as unknown as true,
-    },
+    defaultValues: emptyDefaults,
   });
 
+  // Prefill for edit; reset when opening/closing
   useEffect(() => {
-    if (defaultClass) form.setValue("class", defaultClass);
-  }, [defaultClass, form]);
+    if (!open) return;
+    if (student) {
+      form.reset({
+        name_bn: student.name_bn ?? "",
+        name_en: student.name_en ?? "",
+        mother_name_bn: student.mother_name_bn ?? "",
+        mother_name_en: student.mother_name_en ?? "",
+        father_name_bn: student.father_name_bn ?? "",
+        father_name_en: student.father_name_en ?? "",
+        date_of_birth: student.date_of_birth ? parseISO(student.date_of_birth) : undefined,
+        birth_certificate_no: student.birth_certificate_no ?? "",
+        father_mobile: student.father_mobile ?? "",
+        mother_mobile: student.mother_mobile ?? "",
+        guardian_mobile: student.guardian_mobile ?? "",
+        class: student.class,
+        gender: student.gender ?? "",
+        religion: student.religion ?? "",
+        blood_group: student.blood_group ?? "",
+        nationality: student.nationality ?? "",
+        present_address: student.present_address ?? "",
+        permanent_address: student.permanent_address ?? "",
+        monthly_fee: Number(student.monthly_fee ?? 0),
+        confirm: true as unknown as true,
+      });
+      setPhotoFile(null);
+      setPhotoPreview(null);
+    } else {
+      form.reset({ ...emptyDefaults, class: defaultClass ?? "play" });
+      setPhotoFile(null);
+      setPhotoPreview(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, student?.id]);
+
+  useEffect(() => {
+    if (defaultClass && !isEdit) form.setValue("class", defaultClass);
+  }, [defaultClass, form, isEdit]);
 
   function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -93,7 +166,7 @@ export function StudentRegistrationDialog({ defaultClass, trigger, onCreated }: 
   async function onSubmit(values: FormValues) {
     setSubmitting(true);
     try {
-      let photo_url: string | null = null;
+      let photo_url: string | null | undefined = undefined; // undefined = don't touch
       if (photoFile) {
         const ext = photoFile.name.split(".").pop() || "jpg";
         const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -104,7 +177,7 @@ export function StudentRegistrationDialog({ defaultClass, trigger, onCreated }: 
         photo_url = up.data.path;
       }
 
-      const { error } = await supabase.from("students").insert({
+      const payload: Record<string, unknown> = {
         name_bn: values.name_bn,
         name_en: values.name_en,
         mother_name_bn: values.mother_name_bn || null,
@@ -124,16 +197,31 @@ export function StudentRegistrationDialog({ defaultClass, trigger, onCreated }: 
         present_address: values.present_address || null,
         permanent_address: values.permanent_address || null,
         monthly_fee: values.monthly_fee,
-        photo_url,
-      });
-      if (error) throw error;
-      toast.success("Student registered successfully");
+      };
+
+      if (isEdit && student) {
+        if (photo_url !== undefined) {
+          payload.photo_url = photo_url;
+        }
+        const { error } = await supabase.from("students").update(payload).eq("id", student.id);
+        if (error) throw error;
+        // Remove old photo if replaced
+        if (photo_url && student.photo_url && student.photo_url !== photo_url) {
+          await supabase.storage.from("student-photos").remove([student.photo_url]);
+        }
+        toast.success("Student updated");
+      } else {
+        payload.photo_url = photo_url ?? null;
+        const { error } = await supabase.from("students").insert(payload as never);
+        if (error) throw error;
+        toast.success("Student registered successfully");
+      }
       form.reset();
       setPhotoFile(null); setPhotoPreview(null);
       setOpen(false);
       onCreated?.();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to register");
+      toast.error(err instanceof Error ? err.message : "Failed to save");
     } finally {
       setSubmitting(false);
     }
@@ -143,11 +231,17 @@ export function StudentRegistrationDialog({ defaultClass, trigger, onCreated }: 
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger ?? <Button>Register Student</Button>}</DialogTrigger>
+      {trigger !== undefined || !isEdit ? (
+        <DialogTrigger asChild>{trigger ?? <Button>Register Student</Button>}</DialogTrigger>
+      ) : null}
       <DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">
-            Register Student <span className="font-bn text-base text-muted-foreground">/ শিক্ষার্থী নিবন্ধন</span>
+            {isEdit ? (
+              <>Edit Student <span className="font-bn text-base text-muted-foreground">/ শিক্ষার্থী সম্পাদনা</span></>
+            ) : (
+              <>Register Student <span className="font-bn text-base text-muted-foreground">/ শিক্ষার্থী নিবন্ধন</span></>
+            )}
           </DialogTitle>
         </DialogHeader>
 
@@ -284,34 +378,38 @@ export function StudentRegistrationDialog({ defaultClass, trigger, onCreated }: 
               </div>
               <div>
                 <Label htmlFor="photo" className="cursor-pointer inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-accent">
-                  <Upload className="size-4" /> Upload photo / ছবি আপলোড
+                  <Upload className="size-4" /> {isEdit ? "Replace photo / ছবি পরিবর্তন" : "Upload photo / ছবি আপলোড"}
                 </Label>
                 <Input id="photo" type="file" accept="image/*" className="sr-only" onChange={onPhoto} />
-                <p className="text-xs text-muted-foreground mt-2">JPG/PNG, up to 5MB</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  JPG/PNG, up to 5MB{isEdit ? " · leave empty to keep current photo" : ""}
+                </p>
               </div>
             </div>
           </Section>
 
-          {/* Confirm */}
-          <div className="flex items-start gap-3 rounded-lg border bg-muted/40 p-4">
-            <Checkbox
-              id="confirm"
-              checked={form.watch("confirm") as unknown as boolean}
-              onCheckedChange={(c) => form.setValue("confirm", (c === true) as unknown as true, { shouldValidate: true })}
-            />
-            <Label htmlFor="confirm" className="text-sm leading-relaxed cursor-pointer">
-              I confirm that all the information provided above is accurate and complete.
-              <span className="block font-bn text-muted-foreground mt-1">আমি নিশ্চিত করছি যে উপরে দেওয়া সমস্ত তথ্য সঠিক ও সম্পূর্ণ।</span>
-              {form.formState.errors.confirm && (
-                <span className="block text-destructive text-xs mt-1">{form.formState.errors.confirm.message}</span>
-              )}
-            </Label>
-          </div>
+          {/* Confirm - only for new registrations */}
+          {!isEdit && (
+            <div className="flex items-start gap-3 rounded-lg border bg-muted/40 p-4">
+              <Checkbox
+                id="confirm"
+                checked={form.watch("confirm") as unknown as boolean}
+                onCheckedChange={(c) => form.setValue("confirm", (c === true) as unknown as true, { shouldValidate: true })}
+              />
+              <Label htmlFor="confirm" className="text-sm leading-relaxed cursor-pointer">
+                I confirm that all the information provided above is accurate and complete.
+                <span className="block font-bn text-muted-foreground mt-1">আমি নিশ্চিত করছি যে উপরে দেওয়া সমস্ত তথ্য সঠিক ও সম্পূর্ণ।</span>
+                {form.formState.errors.confirm && (
+                  <span className="block text-destructive text-xs mt-1">{form.formState.errors.confirm.message}</span>
+                )}
+              </Label>
+            </div>
+          )}
 
           <div className="flex justify-end gap-2 sticky bottom-0 bg-background pt-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
             <Button type="submit" disabled={submitting}>
-              {submitting ? "Saving…" : "Register Student"}
+              {submitting ? "Saving…" : isEdit ? "Save Changes" : "Register Student"}
             </Button>
           </div>
         </form>
