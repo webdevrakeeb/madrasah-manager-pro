@@ -5,8 +5,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StudentRegistrationDialog } from "./student-registration-dialog";
+import { StudentViewDialog } from "./student-view-dialog";
 import { CLASS_OPTIONS, type ClassValue } from "@/lib/i18n";
-import { Trash2, UserPlus, BookOpenText } from "lucide-react";
+import { Trash2, UserPlus, BookOpenText, Eye, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -15,8 +16,20 @@ interface Student {
   name_en: string;
   name_bn: string;
   father_name_en: string | null;
+  father_name_bn: string | null;
+  mother_name_en: string | null;
+  mother_name_bn: string | null;
+  father_mobile: string | null;
+  mother_mobile: string | null;
   guardian_mobile: string | null;
   date_of_birth: string | null;
+  birth_certificate_no: string | null;
+  gender: string | null;
+  religion: string | null;
+  blood_group: string | null;
+  nationality: string | null;
+  present_address: string | null;
+  permanent_address: string | null;
   photo_url: string | null;
   class: ClassValue;
   monthly_fee: number;
@@ -28,19 +41,20 @@ export function ClassPage({ classValue }: { classValue: ClassValue }) {
   const [rows, setRows] = useState<Student[]>([]);
   const [signed, setSigned] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [viewStudent, setViewStudent] = useState<Student | null>(null);
+  const [editStudent, setEditStudent] = useState<Student | null>(null);
 
   async function load() {
     setLoading(true);
     const { data, error } = await supabase
       .from("students")
-      .select("id,name_en,name_bn,father_name_en,guardian_mobile,date_of_birth,photo_url,class,monthly_fee,created_at")
+      .select("*")
       .eq("class", classValue)
       .order("created_at", { ascending: false });
     if (error) { toast.error(error.message); setLoading(false); return; }
     const list = (data ?? []) as Student[];
     setRows(list);
 
-    // Sign photo URLs
     const paths = list.map((s) => s.photo_url).filter(Boolean) as string[];
     if (paths.length) {
       const { data: signedData } = await supabase.storage
@@ -114,7 +128,7 @@ export function ClassPage({ classValue }: { classValue: ClassValue }) {
                 <TableHead>Guardian Mobile / অভিভাবক</TableHead>
                 <TableHead>DOB / জন্ম</TableHead>
                 <TableHead>Fee (৳) / ফি</TableHead>
-                <TableHead className="w-16"></TableHead>
+                <TableHead className="w-40 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -140,9 +154,17 @@ export function ClassPage({ classValue }: { classValue: ClassValue }) {
                   </TableCell>
                   <TableCell className="text-sm font-medium">{Number(s.monthly_fee ?? 0).toLocaleString()}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" onClick={() => remove(s.id, s.photo_url)}>
-                      <Trash2 className="size-4 text-destructive" />
-                    </Button>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button variant="ghost" size="icon" title="View" onClick={() => setViewStudent(s)}>
+                        <Eye className="size-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" title="Edit" onClick={() => setEditStudent(s)}>
+                        <Pencil className="size-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" title="Delete" onClick={() => remove(s.id, s.photo_url)}>
+                        <Trash2 className="size-4 text-destructive" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -150,6 +172,20 @@ export function ClassPage({ classValue }: { classValue: ClassValue }) {
           </Table>
         )}
       </Card>
+
+      <StudentViewDialog
+        student={viewStudent}
+        open={!!viewStudent}
+        onOpenChange={(o) => { if (!o) setViewStudent(null); }}
+        signedPhoto={viewStudent?.photo_url ? signed[viewStudent.photo_url] : undefined}
+      />
+
+      <StudentRegistrationDialog
+        student={editStudent}
+        open={!!editStudent}
+        onOpenChange={(o) => { if (!o) setEditStudent(null); }}
+        onCreated={() => { setEditStudent(null); load(); }}
+      />
     </div>
   );
 }
