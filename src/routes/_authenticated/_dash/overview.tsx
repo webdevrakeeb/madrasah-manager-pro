@@ -14,6 +14,7 @@ export const Route = createFileRoute("/_authenticated/_dash/overview")({
 function Overview() {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [total, setTotal] = useState(0);
+  const [teacherCount, setTeacherCount] = useState(0);
   const [recent, setRecent] = useState<{ id: string; name_en: string; name_bn: string; class: string; created_at: string }[]>([]);
 
   async function load() {
@@ -31,6 +32,11 @@ function Overview() {
       .order("created_at", { ascending: false })
       .limit(6);
     setRecent((r ?? []) as typeof recent);
+
+    const { count } = await supabase
+      .from("teachers")
+      .select("id", { count: "exact", head: true });
+    setTeacherCount(count ?? 0);
   }
   useEffect(() => { load(); }, []);
 
@@ -38,8 +44,9 @@ function Overview() {
     { label: "Total Students", bn: "মোট শিক্ষার্থী", value: total, icon: Users, accent: "text-primary" },
     { label: "Active Classes",  bn: "সক্রিয় শ্রেণি",  value: CLASS_OPTIONS.length, icon: BookOpenText, accent: "text-gold" },
     { label: "New This Week",   bn: "এই সপ্তাহে নতুন", value: recent.filter(r => Date.now() - new Date(r.created_at).getTime() < 7*86400000).length, icon: Sparkles, accent: "text-primary" },
-    { label: "Teachers",        bn: "শিক্ষক",          value: 0, icon: Users, accent: "text-muted-foreground" },
+    { label: "Teachers",        bn: "শিক্ষক",          value: teacherCount, icon: Users, accent: "text-muted-foreground" },
   ];
+
 
   return (
     <div className="space-y-8">
