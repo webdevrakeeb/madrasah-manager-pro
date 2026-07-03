@@ -152,3 +152,86 @@ export function DashboardShell() {
     </div>
   );
 }
+
+interface SearchHit {
+  id: string;
+  name_en: string;
+  name_bn: string;
+  class: string;
+}
+
+function GlobalStudentSearch() {
+  const navigate = useNavigate();
+  const [q, setQ] = useState("");
+  const [results, setResults] = useState<SearchHit[]>([]);
+  const [openList, setOpenList] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const term = q.trim();
+    if (!term) { setResults([]); setLoading(false); return; }
+    setLoading(true);
+    const t = setTimeout(async () => {
+      const { data, error } = await supabase
+        .from("students")
+        .select("id,name_en,name_bn,class")
+        .or(`name_en.ilike.%${term}%,name_bn.ilike.%${term}%`)
+        .order("name_en")
+        .limit(10);
+      setLoading(false);
+      if (!error) setResults((data ?? []) as SearchHit[]);
+    }, 200);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  return (
+    <div className="relative hidden md:block">
+      <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+      <Input
+        placeholder="Search students…"
+        value={q}
+        onChange={(e) => { setQ(e.target.value); setOpenList(true); }}
+        onFocus={() => setOpenList(true)}
+        onBlur={() => setTimeout(() => setOpenList(false), 150)}
+        className="pl-9 w-64 bg-background"
+      />
+      {openList && q.trim() && (
+        <div className="absolute right-0 mt-1 w-80 rounded-md border bg-popover text-popover-foreground shadow-md z-50 max-h-96 overflow-auto">
+          {loading ? (
+            <div className="p-4 text-sm text-muted-foreground text-center">Searching…</div>
+          ) : results.length === 0 ? (
+            <div className="p-4 text-sm text-muted-foreground text-center">
+              No students found <span className="font-bn">· কোনো ফলাফল নেই</span>
+            </div>
+          ) : (
+            <ul className="py-1">
+              {results.map((s) => (
+                <li key={s.id}>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      setQ(""); setOpenList(false);
+                      navigate({ to: `/${s.class}` as string });
+                    }}
+                    className="w-full text-left px-3 py-2 hover:bg-accent flex items-center gap-3"
+                  >
+                    <div className="size-8 rounded-full bg-accent grid place-items-center font-display text-xs shrink-0">
+                      {s.name_en[0]?.toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium truncate">{s.name_en}</div>
+                      <div className="font-bn text-xs text-muted-foreground truncate">{s.name_bn}</div>
+                    </div>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground shrink-0">{s.class}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
