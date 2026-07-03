@@ -199,8 +199,10 @@ export function StudentFeeCollection() {
 
           <div className="space-y-2">
             <Label>Amount (৳) / পরিমাণ</Label>
-            <Input type="number" min={0} value={amount} onChange={(e) => setAmount(e.target.value)} />
+            <Input type="number" value={amount} readOnly tabIndex={-1} className="bg-muted/50 cursor-not-allowed" />
+            <p className="text-xs text-muted-foreground">Auto-filled from student's assigned monthly fee</p>
           </div>
+
 
           <div className="space-y-2">
             <Label>Note / নোট (optional)</Label>

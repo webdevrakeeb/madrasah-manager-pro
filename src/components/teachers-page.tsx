@@ -4,16 +4,20 @@ import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { TeacherRegistrationDialog } from "./teacher-registration-dialog";
-import { Trash2, UserPlus, Users } from "lucide-react";
+import { TeacherViewDialog } from "./teacher-view-dialog";
+import { Trash2, UserPlus, Users, Eye, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
 interface Teacher {
   id: string;
   name: string;
+  father_name: string | null;
+  mother_name: string | null;
   designation: string | null;
-  mobile: string | null;
+  mobile: string;
   email: string | null;
+  address: string | null;
   joining_date: string | null;
   monthly_salary: number;
   photo_url: string | null;
@@ -23,12 +27,14 @@ export function TeachersPage() {
   const [rows, setRows] = useState<Teacher[]>([]);
   const [signed, setSigned] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [viewTeacher, setViewTeacher] = useState<Teacher | null>(null);
+  const [editTeacher, setEditTeacher] = useState<Teacher | null>(null);
 
   async function load() {
     setLoading(true);
     const { data, error } = await supabase
       .from("teachers")
-      .select("id,name,designation,mobile,email,joining_date,monthly_salary,photo_url")
+      .select("*")
       .order("created_at", { ascending: false });
     if (error) { toast.error(error.message); setLoading(false); return; }
     const list = (data ?? []) as Teacher[];
@@ -98,7 +104,7 @@ export function TeachersPage() {
                 <TableHead>Mobile</TableHead>
                 <TableHead>Joining</TableHead>
                 <TableHead>Salary (৳)</TableHead>
-                <TableHead className="w-16"></TableHead>
+                <TableHead className="w-40 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -122,9 +128,17 @@ export function TeachersPage() {
                   <TableCell className="text-sm">{t.joining_date ? format(new Date(t.joining_date), "PP") : "—"}</TableCell>
                   <TableCell className="text-sm">{Number(t.monthly_salary).toLocaleString()}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" onClick={() => remove(t.id, t.photo_url)}>
-                      <Trash2 className="size-4 text-destructive" />
-                    </Button>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button variant="ghost" size="icon" title="View" onClick={() => setViewTeacher(t)}>
+                        <Eye className="size-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" title="Edit" onClick={() => setEditTeacher(t)}>
+                        <Pencil className="size-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" title="Delete" onClick={() => remove(t.id, t.photo_url)}>
+                        <Trash2 className="size-4 text-destructive" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -132,6 +146,20 @@ export function TeachersPage() {
           </Table>
         )}
       </Card>
+
+      <TeacherViewDialog
+        teacher={viewTeacher}
+        open={!!viewTeacher}
+        onOpenChange={(o) => { if (!o) setViewTeacher(null); }}
+        signedPhoto={viewTeacher?.photo_url ? signed[viewTeacher.photo_url] : undefined}
+      />
+
+      <TeacherRegistrationDialog
+        teacher={editTeacher}
+        open={!!editTeacher}
+        onOpenChange={(o) => { if (!o) setEditTeacher(null); }}
+        onCreated={() => { setEditTeacher(null); load(); }}
+      />
     </div>
   );
 }

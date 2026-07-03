@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { CalendarIcon, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -29,8 +29,34 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
-export function TeacherRegistrationDialog({ trigger, onCreated }: { trigger?: React.ReactNode; onCreated?: () => void }) {
-  const [open, setOpen] = useState(false);
+export interface TeacherEditData {
+  id: string;
+  name: string;
+  father_name?: string | null;
+  mother_name?: string | null;
+  mobile: string;
+  email?: string | null;
+  address?: string | null;
+  designation?: string | null;
+  joining_date?: string | null;
+  monthly_salary: number;
+  photo_url?: string | null;
+}
+
+interface Props {
+  trigger?: React.ReactNode;
+  onCreated?: () => void;
+  teacher?: TeacherEditData | null;
+  open?: boolean;
+  onOpenChange?: (o: boolean) => void;
+}
+
+export function TeacherRegistrationDialog({ trigger, onCreated, teacher, open: openProp, onOpenChange }: Props) {
+  const isEdit = !!teacher;
+  const [openInternal, setOpenInternal] = useState(false);
+  const open = openProp ?? openInternal;
+  const setOpen = (v: boolean) => { onOpenChange ? onOpenChange(v) : setOpenInternal(v); };
+
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -39,6 +65,27 @@ export function TeacherRegistrationDialog({ trigger, onCreated }: { trigger?: Re
     resolver: zodResolver(schema),
     defaultValues: { name: "", father_name: "", mother_name: "", mobile: "", email: "", address: "", designation: "", monthly_salary: 0 },
   });
+
+  useEffect(() => {
+    if (!open) return;
+    if (teacher) {
+      form.reset({
+        name: teacher.name ?? "",
+        father_name: teacher.father_name ?? "",
+        mother_name: teacher.mother_name ?? "",
+        mobile: teacher.mobile ?? "",
+        email: teacher.email ?? "",
+        address: teacher.address ?? "",
+        designation: teacher.designation ?? "",
+        joining_date: teacher.joining_date ? parseISO(teacher.joining_date) : undefined,
+        monthly_salary: Number(teacher.monthly_salary ?? 0),
+      });
+    } else {
+      form.reset({ name: "", father_name: "", mother_name: "", mobile: "", email: "", address: "", designation: "", monthly_salary: 0, joining_date: undefined });
+    }
+    setPhotoFile(null); setPhotoPreview(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, teacher?.id]);
 
   function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -51,7 +98,7 @@ export function TeacherRegistrationDialog({ trigger, onCreated }: { trigger?: Re
   async function onSubmit(v: FormValues) {
     setSubmitting(true);
     try {
-      let photo_url: string | null = null;
+      let photo_url: string | null | undefined = undefined;
       if (photoFile) {
         const ext = photoFile.name.split(".").pop() || "jpg";
         const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -61,7 +108,7 @@ export function TeacherRegistrationDialog({ trigger, onCreated }: { trigger?: Re
         if (up.error) throw up.error;
         photo_url = up.data.path;
       }
-      const { error } = await supabase.from("teachers").insert({
+      const payload = {
         name: v.name,
         father_name: v.father_name || null,
         mother_name: v.mother_name || null,
@@ -71,16 +118,26 @@ export function TeacherRegistrationDialog({ trigger, onCreated }: { trigger?: Re
         designation: v.designation || null,
         joining_date: v.joining_date ? format(v.joining_date, "yyyy-MM-dd") : null,
         monthly_salary: v.monthly_salary,
-        photo_url,
-      });
-      if (error) throw error;
-      toast.success("Teacher registered successfully");
+      };
+      if (isEdit && teacher) {
+        const updatePayload = photo_url !== undefined ? { ...payload, photo_url } : payload;
+        const { error } = await supabase.from("teachers").update(updatePayload).eq("id", teacher.id);
+        if (error) throw error;
+        if (photo_url && teacher.photo_url && teacher.photo_url !== photo_url) {
+          await supabase.storage.from("teacher-photos").remove([teacher.photo_url]);
+        }
+        toast.success("Teacher updated");
+      } else {
+        const { error } = await supabase.from("teachers").insert({ ...payload, photo_url: photo_url ?? null });
+        if (error) throw error;
+        toast.success("Teacher registered successfully");
+      }
       form.reset();
       setPhotoFile(null); setPhotoPreview(null);
       setOpen(false);
       onCreated?.();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to register");
+      toast.error(err instanceof Error ? err.message : "Failed to save");
     } finally {
       setSubmitting(false);
     }
@@ -90,11 +147,17 @@ export function TeacherRegistrationDialog({ trigger, onCreated }: { trigger?: Re
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger ?? <Button>Register Teacher</Button>}</DialogTrigger>
+      {trigger !== undefined || !isEdit ? (
+        <DialogTrigger asChild>{trigger ?? <Button>Register Teacher</Button>}</DialogTrigger>
+      ) : null}
       <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">
-            Register Teacher <span className="font-bn text-base text-muted-foreground">/ শিক্ষক নিবন্ধন</span>
+            {isEdit ? (
+              <>Edit Teacher <span className="font-bn text-base text-muted-foreground">/ শিক্ষক সম্পাদনা</span></>
+            ) : (
+              <>Register Teacher <span className="font-bn text-base text-muted-foreground">/ শিক্ষক নিবন্ধন</span></>
+            )}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 mt-2">
@@ -146,17 +209,17 @@ export function TeacherRegistrationDialog({ trigger, onCreated }: { trigger?: Re
               </div>
               <div>
                 <Label htmlFor="tphoto" className="cursor-pointer inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-accent">
-                  <Upload className="size-4" /> Upload photo / ছবি
+                  <Upload className="size-4" /> {isEdit ? "Replace photo / ছবি পরিবর্তন" : "Upload photo / ছবি"}
                 </Label>
                 <Input id="tphoto" type="file" accept="image/*" className="sr-only" onChange={onPhoto} />
-                <p className="text-xs text-muted-foreground mt-2">JPG/PNG, up to 5MB</p>
+                <p className="text-xs text-muted-foreground mt-2">JPG/PNG, up to 5MB{isEdit ? " · leave empty to keep current" : ""}</p>
               </div>
             </div>
           </Card>
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" disabled={submitting}>{submitting ? "Saving…" : "Register Teacher"}</Button>
+            <Button type="submit" disabled={submitting}>{submitting ? "Saving…" : isEdit ? "Save Changes" : "Register Teacher"}</Button>
           </div>
         </form>
       </DialogContent>
