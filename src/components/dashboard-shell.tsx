@@ -137,10 +137,8 @@ export function DashboardShell() {
             <span className="font-bn text-sm text-muted-foreground truncate">{active.bn}</span>
           </div>
           <div className="ml-auto flex items-center gap-3">
-            <div className="relative hidden md:block">
-              <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Search students…" className="pl-9 w-64 bg-background" />
-            </div>
+            <GlobalStudentSearch />
+
             <div className="size-9 rounded-full bg-primary/10 text-primary grid place-items-center font-display text-sm">
               {email ? email[0]?.toUpperCase() : "A"}
             </div>
