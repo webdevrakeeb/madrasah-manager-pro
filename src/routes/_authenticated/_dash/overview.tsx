@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { CLASS_OPTIONS } from "@/lib/i18n";
 import { StudentRegistrationDialog } from "@/components/student-registration-dialog";
-import { Users, BookOpenText, Sparkles, UserPlus } from "lucide-react";
+import { Users, BookOpenText, Sparkles, UserPlus, TrendingUp, TrendingDown } from "lucide-react";
 import { format } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/_dash/overview")({
@@ -13,18 +13,25 @@ export const Route = createFileRoute("/_authenticated/_dash/overview")({
 
 function Overview() {
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [classIncome, setClassIncome] = useState<Record<string, number>>({});
   const [total, setTotal] = useState(0);
   const [teacherCount, setTeacherCount] = useState(0);
+  const [monthlyIncome, setMonthlyIncome] = useState(0);
+  const [monthlyExpense, setMonthlyExpense] = useState(0);
   const [recent, setRecent] = useState<{ id: string; name_en: string; name_bn: string; class: string; created_at: string }[]>([]);
 
   async function load() {
     const { data } = await supabase
       .from("students")
-      .select("class")
-      .returns<{ class: string }[]>();
+      .select("class,monthly_fee")
+      .returns<{ class: string; monthly_fee: number | null }[]>();
     const c: Record<string, number> = {};
-    (data ?? []).forEach((r) => { c[r.class] = (c[r.class] ?? 0) + 1; });
-    setCounts(c); setTotal((data ?? []).length);
+    const inc: Record<string, number> = {};
+    (data ?? []).forEach((r) => {
+      c[r.class] = (c[r.class] ?? 0) + 1;
+      inc[r.class] = (inc[r.class] ?? 0) + Number(r.monthly_fee ?? 0);
+    });
+    setCounts(c); setClassIncome(inc); setTotal((data ?? []).length);
 
     const { data: r } = await supabase
       .from("students")
@@ -37,8 +44,30 @@ function Overview() {
       .from("teachers")
       .select("id", { count: "exact", head: true });
     setTeacherCount(count ?? 0);
+
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth() + 1;
+
+    const { data: fees } = await supabase
+      .from("student_fee_payments")
+      .select("amount")
+      .eq("period_year", y)
+      .eq("period_month", m)
+      .returns<{ amount: number | null }[]>();
+    setMonthlyIncome((fees ?? []).reduce((s, x) => s + Number(x.amount ?? 0), 0));
+
+    const { data: sal } = await supabase
+      .from("teacher_salary_payments")
+      .select("amount")
+      .eq("period_year", y)
+      .eq("period_month", m)
+      .returns<{ amount: number | null }[]>();
+    setMonthlyExpense((sal ?? []).reduce((s, x) => s + Number(x.amount ?? 0), 0));
   }
   useEffect(() => { load(); }, []);
+
+  const fmtTk = (n: number) => `৳${n.toLocaleString()}`;
 
   const stats = [
     { label: "Total Students", bn: "মোট শিক্ষার্থী", value: total, icon: Users, accent: "text-primary" },
@@ -47,6 +76,7 @@ function Overview() {
     { label: "Teachers",        bn: "শিক্ষক",          value: teacherCount, icon: Users, accent: "text-muted-foreground" },
   ];
 
+  const monthLabel = format(new Date(), "MMMM yyyy");
 
   return (
     <div className="space-y-8">
@@ -77,6 +107,35 @@ function Overview() {
         })}
       </div>
 
+      {/* Monthly income / expense */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="p-6 relative overflow-hidden">
+          <div className="absolute -right-8 -top-8 size-32 rounded-full bg-emerald-500/10" />
+          <div className="flex items-center gap-2 text-emerald-600">
+            <TrendingUp className="size-5" />
+            <span className="text-xs uppercase tracking-wide font-medium">Monthly Income</span>
+          </div>
+          <div className="mt-3 font-display text-4xl">{fmtTk(monthlyIncome)}</div>
+          <div className="text-xs text-muted-foreground mt-1">
+            Fees collected · {monthLabel}
+          </div>
+          <div className="font-bn text-xs text-muted-foreground/80">এই মাসের মোট আয়</div>
+        </Card>
+
+        <Card className="p-6 relative overflow-hidden">
+          <div className="absolute -right-8 -top-8 size-32 rounded-full bg-rose-500/10" />
+          <div className="flex items-center gap-2 text-rose-600">
+            <TrendingDown className="size-5" />
+            <span className="text-xs uppercase tracking-wide font-medium">Monthly Expense</span>
+          </div>
+          <div className="mt-3 font-display text-4xl">{fmtTk(monthlyExpense)}</div>
+          <div className="text-xs text-muted-foreground mt-1">
+            Salaries paid · {monthLabel}
+          </div>
+          <div className="font-bn text-xs text-muted-foreground/80">এই মাসের মোট ব্যয়</div>
+        </Card>
+      </div>
+
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Class distribution */}
         <Card className="p-6 lg:col-span-2">
@@ -87,12 +146,18 @@ function Overview() {
           <ul className="space-y-3">
             {CLASS_OPTIONS.map((c) => {
               const n = counts[c.value] ?? 0;
+              const income = classIncome[c.value] ?? 0;
               const pct = total ? (n / total) * 100 : 0;
               return (
                 <li key={c.value}>
-                  <div className="flex items-baseline justify-between text-sm mb-1.5">
-                    <span>{c.en} <span className="font-bn text-muted-foreground ml-1 text-xs">{c.bn}</span></span>
-                    <span className="tabular-nums text-muted-foreground">{n}</span>
+                  <div className="flex items-baseline justify-between text-sm mb-1.5 gap-3">
+                    <span className="min-w-0">
+                      {c.en} <span className="font-bn text-muted-foreground ml-1 text-xs">{c.bn}</span>
+                    </span>
+                    <span className="tabular-nums text-muted-foreground flex items-baseline gap-3 shrink-0">
+                      <span>{n} <span className="text-xs">students</span></span>
+                      <span className="text-foreground font-medium">{fmtTk(income)}</span>
+                    </span>
                   </div>
                   <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                     <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
