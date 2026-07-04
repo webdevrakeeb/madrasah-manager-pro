@@ -60,11 +60,11 @@ export function DashboardShell() {
   }
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="h-screen flex bg-background overflow-hidden">
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed lg:static inset-y-0 left-0 z-40 w-72 bg-sidebar text-sidebar-foreground flex flex-col transition-transform",
+          "fixed inset-y-0 left-0 z-40 w-72 bg-sidebar text-sidebar-foreground flex flex-col transition-transform",
           open ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
       >
@@ -127,7 +127,7 @@ export function DashboardShell() {
       )}
 
       {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 lg:ml-72 h-screen overflow-y-auto">
         <header className="h-16 border-b bg-card/70 backdrop-blur sticky top-0 z-20 flex items-center gap-4 px-4 lg:px-8">
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(true)}>
             <Menu className="size-5" />
