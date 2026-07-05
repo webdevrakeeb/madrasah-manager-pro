@@ -8,6 +8,7 @@ import { TeacherViewDialog } from "./teacher-view-dialog";
 import { Trash2, UserPlus, Users, Eye, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { confirmDelete } from "@/lib/swal";
 
 interface Teacher {
   id: string;
