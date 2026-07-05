@@ -71,7 +71,11 @@ export function ClassPage({ classValue }: { classValue: ClassValue }) {
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [classValue]);
 
   async function remove(id: string, photo?: string | null) {
-    if (!confirm("Delete this student?")) return;
+    const result = await confirmDelete(
+      "Delete this student?",
+      "The student's record and photo will be permanently removed."
+    );
+    if (!result.isConfirmed) return;
     const { error } = await supabase.from("students").delete().eq("id", id);
     if (error) return toast.error(error.message);
     if (photo) await supabase.storage.from("student-photos").remove([photo]);
