@@ -10,6 +10,7 @@ import { CLASS_OPTIONS, type ClassValue } from "@/lib/i18n";
 import { Trash2, UserPlus, BookOpenText, Eye, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { confirmDelete } from "@/lib/swal";
 
 interface Student {
   id: string;
