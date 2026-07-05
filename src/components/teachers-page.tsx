@@ -8,6 +8,7 @@ import { TeacherViewDialog } from "./teacher-view-dialog";
 import { Trash2, UserPlus, Users, Eye, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { confirmDelete } from "@/lib/swal";
 
 interface Teacher {
   id: string;
@@ -52,7 +53,11 @@ export function TeachersPage() {
   useEffect(() => { load(); }, []);
 
   async function remove(id: string, photo?: string | null) {
-    if (!confirm("Permanently delete this teacher? This also removes salary history.")) return;
+    const result = await confirmDelete(
+      "Delete this teacher?",
+      "This will permanently remove the teacher and their salary payment history."
+    );
+    if (!result.isConfirmed) return;
     const { error } = await supabase.from("teachers").delete().eq("id", id);
     if (error) return toast.error(error.message);
     if (photo) await supabase.storage.from("teacher-photos").remove([photo]);
