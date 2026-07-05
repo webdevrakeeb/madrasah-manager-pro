@@ -230,7 +230,7 @@ export function StudentRegistrationDialog({
       {trigger !== undefined || !isEdit ? (
         <DialogTrigger asChild>{trigger ?? <Button>Register Student</Button>}</DialogTrigger>
       ) : null}
-      <DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl w-[calc(100%-2rem)] max-h-[92vh] overflow-x-hidden overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">
             {isEdit ? (
