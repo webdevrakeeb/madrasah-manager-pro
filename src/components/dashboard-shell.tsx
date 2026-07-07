@@ -17,6 +17,7 @@ import {
   Menu,
   Wallet,
   BadgeDollarSign,
+  KeyRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,6 +110,15 @@ export function DashboardShell() {
         </nav>
 
         <div className="border-t border-sidebar-border p-4">
+          <Link
+            to="/change-password"
+            onClick={() => setOpen(false)}
+            className="mb-2 flex items-center gap-2 rounded-md px-2 py-2 text-sm text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          >
+            <KeyRound className="size-4" />
+            <span>Change Password</span>
+            <span className="font-bn ml-auto text-xs opacity-60">পাসওয়ার্ড</span>
+          </Link>
           <div className="text-xs text-sidebar-foreground/60">Signed in as</div>
           <div className="text-sm truncate">{email || "—"}</div>
           <Button
