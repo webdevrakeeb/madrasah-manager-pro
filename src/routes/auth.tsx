@@ -19,11 +19,15 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [adminExists, setAdminExists] = useState<boolean | null>(null);
 
   // Already logged in? bounce in.
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) navigate({ to: "/overview" });
+    });
+    supabase.rpc("admin_exists").then(({ data, error }) => {
+      setAdminExists(error ? true : Boolean(data));
     });
   }, [navigate]);
 
@@ -103,19 +107,21 @@ function AuthPage() {
             </Button>
           </form>
 
-          <div className="mt-6 text-sm text-center text-muted-foreground">
-            {mode === "signin" ? (
-              <>First time here?{" "}
-                <button className="text-primary underline-offset-4 hover:underline"
-                        onClick={() => setMode("signup")}>Create the first admin</button>
-              </>
-            ) : (
-              <>Already have an account?{" "}
-                <button className="text-primary underline-offset-4 hover:underline"
-                        onClick={() => setMode("signin")}>Sign in</button>
-              </>
-            )}
-          </div>
+          {adminExists === false && (
+            <div className="mt-6 text-sm text-center text-muted-foreground">
+              {mode === "signin" ? (
+                <>First time here?{" "}
+                  <button className="text-primary underline-offset-4 hover:underline"
+                          onClick={() => setMode("signup")}>Create the first admin</button>
+                </>
+              ) : (
+                <>Already have an account?{" "}
+                  <button className="text-primary underline-offset-4 hover:underline"
+                          onClick={() => setMode("signin")}>Sign in</button>
+                </>
+              )}
+            </div>
+          )}
         </Card>
       </div>
     </div>
