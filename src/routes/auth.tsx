@@ -19,11 +19,15 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [adminExists, setAdminExists] = useState<boolean | null>(null);
 
   // Already logged in? bounce in.
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) navigate({ to: "/overview" });
+    });
+    supabase.rpc("admin_exists").then(({ data, error }) => {
+      setAdminExists(error ? true : Boolean(data));
     });
   }, [navigate]);
 
