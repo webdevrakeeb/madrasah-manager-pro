@@ -107,19 +107,21 @@ function AuthPage() {
             </Button>
           </form>
 
-          <div className="mt-6 text-sm text-center text-muted-foreground">
-            {mode === "signin" ? (
-              <>First time here?{" "}
-                <button className="text-primary underline-offset-4 hover:underline"
-                        onClick={() => setMode("signup")}>Create the first admin</button>
-              </>
-            ) : (
-              <>Already have an account?{" "}
-                <button className="text-primary underline-offset-4 hover:underline"
-                        onClick={() => setMode("signin")}>Sign in</button>
-              </>
-            )}
-          </div>
+          {adminExists === false && (
+            <div className="mt-6 text-sm text-center text-muted-foreground">
+              {mode === "signin" ? (
+                <>First time here?{" "}
+                  <button className="text-primary underline-offset-4 hover:underline"
+                          onClick={() => setMode("signup")}>Create the first admin</button>
+                </>
+              ) : (
+                <>Already have an account?{" "}
+                  <button className="text-primary underline-offset-4 hover:underline"
+                          onClick={() => setMode("signin")}>Sign in</button>
+                </>
+              )}
+            </div>
+          )}
         </Card>
       </div>
     </div>
