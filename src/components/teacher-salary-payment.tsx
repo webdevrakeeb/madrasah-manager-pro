@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,64 +9,31 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { MONTHS, currentYear, monthLabel, yearOptions } from "@/lib/months";
+import { listTeachers, listSalaryPayments, addSalaryPayment, type Teacher, type SalaryPayment } from "@/lib/store";
 import { format } from "date-fns";
 import { Check, CircleDashed, BadgeDollarSign } from "lucide-react";
 
-interface TeacherLite {
-  id: string;
-  name: string;
-  designation: string | null;
-  monthly_salary: number;
-}
-
-interface Payment {
-  id: string;
-  period_year: number;
-  period_month: number;
-  amount: number;
-  paid_at: string;
-  note: string | null;
-}
-
 export function TeacherSalaryPayment() {
-  const [teachers, setTeachers] = useState<TeacherLite[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
   const [year, setYear] = useState<number>(currentYear());
   const [month, setMonth] = useState<number>(new Date().getMonth() + 1);
   const [amount, setAmount] = useState<string>("");
   const [note, setNote] = useState<string>("");
-  const [payments, setPayments] = useState<Payment[]>([]);
+  const [payments, setPayments] = useState<SalaryPayment[]>([]);
   const [saving, setSaving] = useState(false);
 
   const selected = useMemo(() => teachers.find((t) => t.id === selectedId), [teachers, selectedId]);
 
   useEffect(() => {
-    (async () => {
-      const { data, error } = await supabase
-        .from("teachers")
-        .select("id,name,designation,monthly_salary")
-        .order("name");
-      if (error) return toast.error(error.message);
-      setTeachers((data ?? []) as TeacherLite[]);
-    })();
+    setTeachers([...listTeachers()].sort((a, b) => a.name.localeCompare(b.name)));
   }, []);
 
   useEffect(() => {
     if (!selected) { setPayments([]); setAmount(""); return; }
     setAmount(String(selected.monthly_salary ?? 0));
-    loadPayments(selected.id);
+    setPayments(listSalaryPayments(selected.id));
   }, [selected]);
-
-  async function loadPayments(teacherId: string) {
-    const { data, error } = await supabase
-      .from("teacher_salary_payments")
-      .select("id,period_year,period_month,amount,paid_at,note")
-      .eq("teacher_id", teacherId)
-      .order("period_year", { ascending: false })
-      .order("period_month", { ascending: false });
-    if (error) return toast.error(error.message);
-    setPayments((data ?? []) as Payment[]);
-  }
 
   const paidForYear = useMemo(() => {
     const set = new Set<number>();
@@ -77,29 +43,28 @@ export function TeacherSalaryPayment() {
 
   const alreadyPaid = paidForYear.has(month);
 
-  async function recordPayment() {
+  function recordPayment() {
     if (!selected) return toast.error("Select a teacher");
     const amt = Number(amount);
     if (isNaN(amt) || amt < 0) return toast.error("Enter a valid amount");
     if (alreadyPaid) return toast.error("Salary for this month is already paid");
     setSaving(true);
-    const { data: userData } = await supabase.auth.getUser();
-    const { error } = await supabase.from("teacher_salary_payments").insert({
-      teacher_id: selected.id,
-      period_year: year,
-      period_month: month,
-      amount: amt,
-      note: note || null,
-      created_by: userData.user?.id ?? null,
-    });
-    setSaving(false);
-    if (error) {
-      if (error.code === "23505") return toast.error("Salary for this month already exists");
-      return toast.error(error.message);
+    try {
+      addSalaryPayment({
+        teacher_id: selected.id,
+        period_year: year,
+        period_month: month,
+        amount: amt,
+        note: note || null,
+      });
+      toast.success(`Recorded ${monthLabel(month).en} ${year}`);
+      setNote("");
+      setPayments(listSalaryPayments(selected.id));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setSaving(false);
     }
-    toast.success(`Recorded ${monthLabel(month).en} ${year}`);
-    setNote("");
-    loadPayments(selected.id);
   }
 
   return (

@@ -1,66 +1,36 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { TeacherRegistrationDialog } from "./teacher-registration-dialog";
 import { TeacherViewDialog } from "./teacher-view-dialog";
+import { listTeachers, deleteTeacher, type Teacher } from "@/lib/store";
 import { Trash2, UserPlus, Users, Eye, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { confirmDelete } from "@/lib/swal";
 
-interface Teacher {
-  id: string;
-  name: string;
-  father_name: string | null;
-  mother_name: string | null;
-  designation: string | null;
-  mobile: string;
-  email: string | null;
-  address: string | null;
-  joining_date: string | null;
-  monthly_salary: number;
-  photo_url: string | null;
-}
-
 export function TeachersPage() {
   const [rows, setRows] = useState<Teacher[]>([]);
-  const [signed, setSigned] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [viewTeacher, setViewTeacher] = useState<Teacher | null>(null);
   const [editTeacher, setEditTeacher] = useState<Teacher | null>(null);
 
-  async function load() {
+  function load() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("teachers")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) { toast.error(error.message); setLoading(false); return; }
-    const list = (data ?? []) as Teacher[];
-    setRows(list);
-    const paths = list.map((t) => t.photo_url).filter(Boolean) as string[];
-    if (paths.length) {
-      const { data: sd } = await supabase.storage.from("teacher-photos").createSignedUrls(paths, 3600);
-      const map: Record<string, string> = {};
-      sd?.forEach((s) => { if (s.path && s.signedUrl) map[s.path] = s.signedUrl; });
-      setSigned(map);
-    } else setSigned({});
+    setRows(listTeachers());
     setLoading(false);
   }
 
   useEffect(() => { load(); }, []);
 
-  async function remove(id: string, photo?: string | null) {
+  async function remove(id: string) {
     const result = await confirmDelete(
       "Delete this teacher?",
       "This will permanently remove the teacher and their salary payment history."
     );
     if (!result.isConfirmed) return;
-    const { error } = await supabase.from("teachers").delete().eq("id", id);
-    if (error) return toast.error(error.message);
-    if (photo) await supabase.storage.from("teacher-photos").remove([photo]);
+    deleteTeacher(id);
     toast.success("Teacher deleted");
     load();
   }
@@ -117,8 +87,8 @@ export function TeachersPage() {
                 <TableRow key={t.id}>
                   <TableCell>
                     <div className="size-10 rounded-full bg-muted overflow-hidden grid place-items-center">
-                      {t.photo_url && signed[t.photo_url] ? (
-                        <img src={signed[t.photo_url]} alt="" className="size-full object-cover" />
+                      {t.photo_url ? (
+                        <img src={t.photo_url} alt="" className="size-full object-cover" />
                       ) : (
                         <span className="text-xs font-display text-muted-foreground">{t.name[0]?.toUpperCase()}</span>
                       )}
@@ -140,7 +110,7 @@ export function TeachersPage() {
                       <Button variant="ghost" size="icon" title="Edit" onClick={() => setEditTeacher(t)}>
                         <Pencil className="size-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" title="Delete" onClick={() => remove(t.id, t.photo_url)}>
+                      <Button variant="ghost" size="icon" title="Delete" onClick={() => remove(t.id)}>
                         <Trash2 className="size-4 text-destructive" />
                       </Button>
                     </div>
@@ -156,7 +126,6 @@ export function TeachersPage() {
         teacher={viewTeacher}
         open={!!viewTeacher}
         onOpenChange={(o) => { if (!o) setViewTeacher(null); }}
-        signedPhoto={viewTeacher?.photo_url ? signed[viewTeacher.photo_url] : undefined}
       />
 
       <TeacherRegistrationDialog

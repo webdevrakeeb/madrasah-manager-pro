@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,35 +10,19 @@ import {
 import { toast } from "sonner";
 import { CLASS_OPTIONS } from "@/lib/i18n";
 import { MONTHS, currentYear, monthLabel, yearOptions } from "@/lib/months";
+import { listStudents, listFeePayments, addFeePayment, type Student, type FeePayment } from "@/lib/store";
 import { format } from "date-fns";
 import { Check, CircleDashed, Wallet } from "lucide-react";
 
-interface StudentLite {
-  id: string;
-  name_en: string;
-  name_bn: string;
-  class: string;
-  monthly_fee: number;
-}
-
-interface Payment {
-  id: string;
-  period_year: number;
-  period_month: number;
-  amount: number;
-  paid_at: string;
-  note: string | null;
-}
-
 export function StudentFeeCollection() {
-  const [students, setStudents] = useState<StudentLite[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [classFilter, setClassFilter] = useState<string>("");
   const [selectedId, setSelectedId] = useState<string>("");
   const [year, setYear] = useState<number>(currentYear());
   const [month, setMonth] = useState<number>(new Date().getMonth() + 1);
   const [amount, setAmount] = useState<string>("");
   const [note, setNote] = useState<string>("");
-  const [payments, setPayments] = useState<Payment[]>([]);
+  const [payments, setPayments] = useState<FeePayment[]>([]);
   const [saving, setSaving] = useState(false);
 
   const selected = useMemo(() => students.find((s) => s.id === selectedId), [students, selectedId]);
@@ -49,14 +32,7 @@ export function StudentFeeCollection() {
   );
 
   useEffect(() => {
-    (async () => {
-      const { data, error } = await supabase
-        .from("students")
-        .select("id,name_en,name_bn,class,monthly_fee")
-        .order("name_en");
-      if (error) return toast.error(error.message);
-      setStudents((data ?? []) as StudentLite[]);
-    })();
+    setStudents([...listStudents()].sort((a, b) => a.name_en.localeCompare(b.name_en)));
   }, []);
 
   // Clear selected student if class filter changes and no longer matches
@@ -69,19 +45,8 @@ export function StudentFeeCollection() {
   useEffect(() => {
     if (!selected) { setPayments([]); setAmount(""); return; }
     setAmount(String(selected.monthly_fee ?? 0));
-    loadPayments(selected.id);
+    setPayments(listFeePayments(selected.id));
   }, [selected]);
-
-  async function loadPayments(studentId: string) {
-    const { data, error } = await supabase
-      .from("student_fee_payments")
-      .select("id,period_year,period_month,amount,paid_at,note")
-      .eq("student_id", studentId)
-      .order("period_year", { ascending: false })
-      .order("period_month", { ascending: false });
-    if (error) return toast.error(error.message);
-    setPayments((data ?? []) as Payment[]);
-  }
 
   const paidForYear = useMemo(() => {
     const set = new Set<number>();
@@ -91,29 +56,28 @@ export function StudentFeeCollection() {
 
   const alreadyPaid = paidForYear.has(month);
 
-  async function recordPayment() {
+  function recordPayment() {
     if (!selected) return toast.error("Select a student");
     const amt = Number(amount);
     if (isNaN(amt) || amt < 0) return toast.error("Enter a valid amount");
     if (alreadyPaid) return toast.error("This month is already paid");
     setSaving(true);
-    const { data: userData } = await supabase.auth.getUser();
-    const { error } = await supabase.from("student_fee_payments").insert({
-      student_id: selected.id,
-      period_year: year,
-      period_month: month,
-      amount: amt,
-      note: note || null,
-      created_by: userData.user?.id ?? null,
-    });
-    setSaving(false);
-    if (error) {
-      if (error.code === "23505") return toast.error("Payment for this month already exists");
-      return toast.error(error.message);
+    try {
+      addFeePayment({
+        student_id: selected.id,
+        period_year: year,
+        period_month: month,
+        amount: amt,
+        note: note || null,
+      });
+      toast.success(`Recorded ${monthLabel(month).en} ${year}`);
+      setNote("");
+      setPayments(listFeePayments(selected.id));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setSaving(false);
     }
-    toast.success(`Recorded ${monthLabel(month).en} ${year}`);
-    setNote("");
-    loadPayments(selected.id);
   }
 
   return (
