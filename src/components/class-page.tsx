@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -7,78 +6,35 @@ import { Button } from "@/components/ui/button";
 import { StudentRegistrationDialog } from "./student-registration-dialog";
 import { StudentViewDialog } from "./student-view-dialog";
 import { CLASS_OPTIONS, type ClassValue } from "@/lib/i18n";
+import { listStudents, deleteStudent, type Student } from "@/lib/store";
 import { Trash2, UserPlus, BookOpenText, Eye, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { confirmDelete } from "@/lib/swal";
 
-interface Student {
-  id: string;
-  name_en: string;
-  name_bn: string;
-  father_name_en: string | null;
-  father_name_bn: string | null;
-  mother_name_en: string | null;
-  mother_name_bn: string | null;
-  father_mobile: string | null;
-  mother_mobile: string | null;
-  guardian_mobile: string | null;
-  date_of_birth: string | null;
-  birth_certificate_no: string | null;
-  gender: string | null;
-  religion: string | null;
-  blood_group: string | null;
-  nationality: string | null;
-  present_address: string | null;
-  permanent_address: string | null;
-  photo_url: string | null;
-  class: ClassValue;
-  monthly_fee: number;
-  created_at: string;
-}
-
 export function ClassPage({ classValue }: { classValue: ClassValue }) {
   const meta = CLASS_OPTIONS.find((c) => c.value === classValue)!;
   const [rows, setRows] = useState<Student[]>([]);
-  const [signed, setSigned] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [viewStudent, setViewStudent] = useState<Student | null>(null);
   const [editStudent, setEditStudent] = useState<Student | null>(null);
 
-  async function load() {
+  function load() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("students")
-      .select("*")
-      .eq("class", classValue)
-      .order("created_at", { ascending: false });
-    if (error) { toast.error(error.message); setLoading(false); return; }
-    const list = (data ?? []) as Student[];
+    const list = listStudents().filter((s) => s.class === classValue);
     setRows(list);
-
-    const paths = list.map((s) => s.photo_url).filter(Boolean) as string[];
-    if (paths.length) {
-      const { data: signedData } = await supabase.storage
-        .from("student-photos")
-        .createSignedUrls(paths, 3600);
-      const map: Record<string, string> = {};
-      signedData?.forEach((s) => { if (s.path && s.signedUrl) map[s.path] = s.signedUrl; });
-      setSigned(map);
-    } else setSigned({});
     setLoading(false);
   }
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [classValue]);
 
-  async function remove(id: string, photo?: string | null) {
+  async function remove(id: string) {
     const result = await confirmDelete(
       "Delete this student?",
-      "The student's record and photo will be permanently removed."
+      "The student's record and fee history will be permanently removed."
     );
     if (!result.isConfirmed) return;
-    const { error } = await supabase.from("students").delete().eq("id", id);
-    if (error) return toast.error(error.message);
-    if (photo) await supabase.storage.from("student-photos").remove([photo]);
+    deleteStudent(id);
     toast.success("Student deleted");
     load();
   }
@@ -141,8 +97,8 @@ export function ClassPage({ classValue }: { classValue: ClassValue }) {
                 <TableRow key={s.id}>
                   <TableCell>
                     <div className="size-10 rounded-full bg-muted overflow-hidden grid place-items-center">
-                      {s.photo_url && signed[s.photo_url] ? (
-                        <img src={signed[s.photo_url]} alt="" className="size-full object-cover" />
+                      {s.photo_url ? (
+                        <img src={s.photo_url} alt="" className="size-full object-cover" />
                       ) : (
                         <span className="text-xs font-display text-muted-foreground">{s.name_en[0]?.toUpperCase()}</span>
                       )}
@@ -166,7 +122,7 @@ export function ClassPage({ classValue }: { classValue: ClassValue }) {
                       <Button variant="ghost" size="icon" title="Edit" onClick={() => setEditStudent(s)}>
                         <Pencil className="size-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" title="Delete" onClick={() => remove(s.id, s.photo_url)}>
+                      <Button variant="ghost" size="icon" title="Delete" onClick={() => remove(s.id)}>
                         <Trash2 className="size-4 text-destructive" />
                       </Button>
                     </div>
@@ -182,7 +138,6 @@ export function ClassPage({ classValue }: { classValue: ClassValue }) {
         student={viewStudent}
         open={!!viewStudent}
         onOpenChange={(o) => { if (!o) setViewStudent(null); }}
-        signedPhoto={viewStudent?.photo_url ? signed[viewStudent.photo_url] : undefined}
       />
 
       <StudentRegistrationDialog
