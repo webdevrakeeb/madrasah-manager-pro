@@ -1,6 +1,8 @@
 // Frontend-only data layer backed by localStorage.
 // All students, teachers, and payments live in the browser — no backend.
 
+import type { ClassValue } from "@/lib/i18n";
+
 export interface Student {
   id: string;
   name_en: string;
@@ -21,7 +23,7 @@ export interface Student {
   present_address: string | null;
   permanent_address: string | null;
   photo_url: string | null; // data URL
-  class: string;
+  class: ClassValue;
   monthly_fee: number;
   created_at: string;
 }
