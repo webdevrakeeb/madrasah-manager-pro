@@ -1,4 +1,4 @@
-import { Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { listStudents } from "@/lib/store";
 import {
@@ -37,7 +37,6 @@ const NAV = [
 
 export function DashboardShell() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const email = "";
   const [open, setOpen] = useState(false);
 
   const active = NAV.find((n) => pathname.startsWith(n.to)) ?? NAV[0];
@@ -114,7 +113,7 @@ export function DashboardShell() {
             <GlobalStudentSearch />
 
             <div className="size-9 rounded-full bg-primary/10 text-primary grid place-items-center font-display text-sm">
-              {email ? email[0]?.toUpperCase() : "A"}
+              A
             </div>
           </div>
         </header>
