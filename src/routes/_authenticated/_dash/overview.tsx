@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { listStudents, listTeachers, listFeePayments, listSalaryPayments } from "@/lib/store";
 import { Card } from "@/components/ui/card";
 import { CLASS_OPTIONS } from "@/lib/i18n";
 import { StudentRegistrationDialog } from "@/components/student-registration-dialog";
@@ -20,50 +20,24 @@ function Overview() {
   const [monthlyExpense, setMonthlyExpense] = useState(0);
   const [recent, setRecent] = useState<{ id: string; name_en: string; name_bn: string; class: string; created_at: string }[]>([]);
 
-  async function load() {
-    const { data } = await supabase
-      .from("students")
-      .select("class,monthly_fee")
-      .returns<{ class: string; monthly_fee: number | null }[]>();
+  function load() {
+    const data = listStudents();
     const c: Record<string, number> = {};
     const inc: Record<string, number> = {};
-    (data ?? []).forEach((r) => {
+    data.forEach((r) => {
       c[r.class] = (c[r.class] ?? 0) + 1;
       inc[r.class] = (inc[r.class] ?? 0) + Number(r.monthly_fee ?? 0);
     });
-    setCounts(c); setClassIncome(inc); setTotal((data ?? []).length);
-
-    const { data: r } = await supabase
-      .from("students")
-      .select("id,name_en,name_bn,class,created_at")
-      .order("created_at", { ascending: false })
-      .limit(6);
-    setRecent((r ?? []) as typeof recent);
-
-    const { count } = await supabase
-      .from("teachers")
-      .select("id", { count: "exact", head: true });
-    setTeacherCount(count ?? 0);
-
+    setCounts(c); setClassIncome(inc); setTotal(data.length);
+    setRecent(
+      [...data].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 6),
+    );
+    setTeacherCount(listTeachers().length);
     const now = new Date();
     const y = now.getFullYear();
     const m = now.getMonth() + 1;
-
-    const { data: fees } = await supabase
-      .from("student_fee_payments")
-      .select("amount")
-      .eq("period_year", y)
-      .eq("period_month", m)
-      .returns<{ amount: number | null }[]>();
-    setMonthlyIncome((fees ?? []).reduce((s, x) => s + Number(x.amount ?? 0), 0));
-
-    const { data: sal } = await supabase
-      .from("teacher_salary_payments")
-      .select("amount")
-      .eq("period_year", y)
-      .eq("period_month", m)
-      .returns<{ amount: number | null }[]>();
-    setMonthlyExpense((sal ?? []).reduce((s, x) => s + Number(x.amount ?? 0), 0));
+    setMonthlyIncome(listFeePayments().filter((p) => p.period_year === y && p.period_month === m).reduce((s, x) => s + Number(x.amount), 0));
+    setMonthlyExpense(listSalaryPayments().filter((p) => p.period_year === y && p.period_month === m).reduce((s, x) => s + Number(x.amount), 0));
   }
   useEffect(() => { load(); }, []);
 
