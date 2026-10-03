@@ -5,11 +5,10 @@ import { Card } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
+import { listSalaryPayments } from "@/lib/store";
 import { MONTHS, currentYear, yearOptions } from "@/lib/months";
 import { format } from "date-fns";
 import { Check, CircleDashed } from "lucide-react";
-import { toast } from "sonner";
 
 export interface TeacherViewData {
   id: string;
@@ -47,18 +46,8 @@ export function TeacherViewDialog({ teacher, open, onOpenChange, signedPhoto }: 
 
   useEffect(() => {
     if (!open || !teacher) return;
-    (async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("teacher_salary_payments")
-        .select("id,period_year,period_month,amount,paid_at")
-        .eq("teacher_id", teacher.id)
-        .order("period_year", { ascending: false })
-        .order("period_month", { ascending: false });
-      setLoading(false);
-      if (error) return toast.error(error.message);
-      setPayments((data ?? []) as Payment[]);
-    })();
+    setLoading(false);
+    setPayments(listSalaryPayments(teacher.id));
   }, [open, teacher?.id]);
 
   if (!teacher) return null;

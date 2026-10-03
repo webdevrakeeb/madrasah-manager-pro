@@ -20,7 +20,7 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
-import { supabase } from "@/integrations/supabase/client";
+import { addStudent, updateStudent, fileToDataUrl } from "@/lib/store";
 import {
   CLASS_OPTIONS, GENDER_OPTIONS, RELIGION_OPTIONS, BLOOD_GROUPS, NATIONALITY_OPTIONS,
   type ClassValue,
@@ -167,15 +167,7 @@ export function StudentRegistrationDialog({
     setSubmitting(true);
     try {
       let photo_url: string | null | undefined = undefined; // undefined = don't touch
-      if (photoFile) {
-        const ext = photoFile.name.split(".").pop() || "jpg";
-        const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const up = await supabase.storage.from("student-photos").upload(path, photoFile, {
-          contentType: photoFile.type, upsert: false,
-        });
-        if (up.error) throw up.error;
-        photo_url = up.data.path;
-      }
+      if (photoFile) photo_url = await fileToDataUrl(photoFile);
 
       const payload = {
         name_bn: values.name_bn,
@@ -200,16 +192,10 @@ export function StudentRegistrationDialog({
       };
 
       if (isEdit && student) {
-        const updatePayload = photo_url !== undefined ? { ...payload, photo_url } : payload;
-        const { error } = await supabase.from("students").update(updatePayload).eq("id", student.id);
-        if (error) throw error;
-        if (photo_url && student.photo_url && student.photo_url !== photo_url) {
-          await supabase.storage.from("student-photos").remove([student.photo_url]);
-        }
+        updateStudent(student.id, photo_url !== undefined ? { ...payload, photo_url } : payload);
         toast.success("Student updated");
       } else {
-        const { error } = await supabase.from("students").insert({ ...payload, photo_url: photo_url ?? null });
-        if (error) throw error;
+        addStudent({ ...payload, photo_url: photo_url ?? null });
         toast.success("Student registered successfully");
       }
       form.reset();

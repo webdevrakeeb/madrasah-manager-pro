@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedDashRouteImport } from './routes/_authenticated/_dash'
@@ -24,13 +23,7 @@ import { Route as AuthenticatedDashNurseryRouteImport } from './routes/_authenti
 import { Route as AuthenticatedDashHifzRouteImport } from './routes/_authenticated/_dash/hifz'
 import { Route as AuthenticatedDashFourRouteImport } from './routes/_authenticated/_dash/four'
 import { Route as AuthenticatedDashFeesRouteImport } from './routes/_authenticated/_dash/fees'
-import { Route as AuthenticatedDashChangePasswordRouteImport } from './routes/_authenticated/_dash/change-password'
 
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -103,17 +96,9 @@ const AuthenticatedDashFeesRoute = AuthenticatedDashFeesRouteImport.update({
   path: '/fees',
   getParentRoute: () => AuthenticatedDashRoute,
 } as any)
-const AuthenticatedDashChangePasswordRoute =
-  AuthenticatedDashChangePasswordRouteImport.update({
-    id: '/change-password',
-    path: '/change-password',
-    getParentRoute: () => AuthenticatedDashRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
-  '/change-password': typeof AuthenticatedDashChangePasswordRoute
   '/fees': typeof AuthenticatedDashFeesRoute
   '/four': typeof AuthenticatedDashFourRoute
   '/hifz': typeof AuthenticatedDashHifzRoute
@@ -128,8 +113,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
-  '/change-password': typeof AuthenticatedDashChangePasswordRoute
   '/fees': typeof AuthenticatedDashFeesRoute
   '/four': typeof AuthenticatedDashFourRoute
   '/hifz': typeof AuthenticatedDashHifzRoute
@@ -146,9 +129,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/auth': typeof AuthRoute
   '/_authenticated/_dash': typeof AuthenticatedDashRouteWithChildren
-  '/_authenticated/_dash/change-password': typeof AuthenticatedDashChangePasswordRoute
   '/_authenticated/_dash/fees': typeof AuthenticatedDashFeesRoute
   '/_authenticated/_dash/four': typeof AuthenticatedDashFourRoute
   '/_authenticated/_dash/hifz': typeof AuthenticatedDashHifzRoute
@@ -165,8 +146,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/auth'
-    | '/change-password'
     | '/fees'
     | '/four'
     | '/hifz'
@@ -181,8 +160,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/auth'
-    | '/change-password'
     | '/fees'
     | '/four'
     | '/hifz'
@@ -198,9 +175,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
-    | '/auth'
     | '/_authenticated/_dash'
-    | '/_authenticated/_dash/change-password'
     | '/_authenticated/_dash/fees'
     | '/_authenticated/_dash/four'
     | '/_authenticated/_dash/hifz'
@@ -217,18 +192,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -327,18 +294,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashFeesRouteImport
       parentRoute: typeof AuthenticatedDashRoute
     }
-    '/_authenticated/_dash/change-password': {
-      id: '/_authenticated/_dash/change-password'
-      path: '/change-password'
-      fullPath: '/change-password'
-      preLoaderRoute: typeof AuthenticatedDashChangePasswordRouteImport
-      parentRoute: typeof AuthenticatedDashRoute
-    }
   }
 }
 
 interface AuthenticatedDashRouteChildren {
-  AuthenticatedDashChangePasswordRoute: typeof AuthenticatedDashChangePasswordRoute
   AuthenticatedDashFeesRoute: typeof AuthenticatedDashFeesRoute
   AuthenticatedDashFourRoute: typeof AuthenticatedDashFourRoute
   AuthenticatedDashHifzRoute: typeof AuthenticatedDashHifzRoute
@@ -353,7 +312,6 @@ interface AuthenticatedDashRouteChildren {
 }
 
 const AuthenticatedDashRouteChildren: AuthenticatedDashRouteChildren = {
-  AuthenticatedDashChangePasswordRoute: AuthenticatedDashChangePasswordRoute,
   AuthenticatedDashFeesRoute: AuthenticatedDashFeesRoute,
   AuthenticatedDashFourRoute: AuthenticatedDashFourRoute,
   AuthenticatedDashHifzRoute: AuthenticatedDashHifzRoute,
@@ -384,7 +342,6 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

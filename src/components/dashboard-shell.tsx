@@ -1,6 +1,6 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { listStudents } from "@/lib/store";
 import {
   LayoutDashboard,
   Baby,
@@ -12,17 +12,13 @@ import {
   GraduationCap,
   Users,
   BookOpenText,
-  LogOut,
   Search,
   Menu,
   Wallet,
   BadgeDollarSign,
-  KeyRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -40,25 +36,10 @@ const NAV = [
 ] as const;
 
 export function DashboardShell() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [email, setEmail] = useState<string>("");
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
-  }, []);
-
   const active = NAV.find((n) => pathname.startsWith(n.to)) ?? NAV[0];
-
-  async function signOut() {
-    await queryClient.cancelQueries();
-    queryClient.clear();
-    await supabase.auth.signOut();
-    toast.success("Signed out");
-    navigate({ to: "/auth", replace: true });
-  }
 
   return (
     <div className="h-screen flex bg-background overflow-hidden">
@@ -109,26 +90,8 @@ export function DashboardShell() {
           </ul>
         </nav>
 
-        <div className="border-t border-sidebar-border p-4">
-          <Link
-            to="/change-password"
-            onClick={() => setOpen(false)}
-            className="mb-2 flex items-center gap-2 rounded-md px-2 py-2 text-sm text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          >
-            <KeyRound className="size-4" />
-            <span>Change Password</span>
-            <span className="font-bn ml-auto text-xs opacity-60">পাসওয়ার্ড</span>
-          </Link>
-          <div className="text-xs text-sidebar-foreground/60">Signed in as</div>
-          <div className="text-sm truncate">{email || "—"}</div>
-          <Button
-            onClick={signOut}
-            variant="ghost"
-            size="sm"
-            className="mt-3 w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          >
-            <LogOut className="size-4 mr-2" /> Sign out <span className="font-bn ml-auto text-xs opacity-60">লগ আউট</span>
-          </Button>
+        <div className="border-t border-sidebar-border p-4 text-xs text-sidebar-foreground/60">
+          Data is saved in this browser · তথ্য এই ব্রাউজারে সংরক্ষিত
         </div>
       </aside>
 
@@ -150,7 +113,7 @@ export function DashboardShell() {
             <GlobalStudentSearch />
 
             <div className="size-9 rounded-full bg-primary/10 text-primary grid place-items-center font-display text-sm">
-              {email ? email[0]?.toUpperCase() : "A"}
+              A
             </div>
           </div>
         </header>
@@ -181,16 +144,15 @@ function GlobalStudentSearch() {
     const term = q.trim();
     if (!term) { setResults([]); setLoading(false); return; }
     setLoading(true);
-    const t = setTimeout(async () => {
-      const { data, error } = await supabase
-        .from("students")
-        .select("id,name_en,name_bn,class")
-        .or(`name_en.ilike.%${term}%,name_bn.ilike.%${term}%`)
-        .order("name_en")
-        .limit(10);
+    const t = setTimeout(() => {
+      const lc = term.toLowerCase();
+      const data = listStudents()
+        .filter((s) => s.name_en.toLowerCase().includes(lc) || s.name_bn.includes(term))
+        .sort((a, b) => a.name_en.localeCompare(b.name_en))
+        .slice(0, 10);
       setLoading(false);
-      if (!error) setResults((data ?? []) as SearchHit[]);
-    }, 200);
+      setResults(data);
+    }, 150);
     return () => clearTimeout(t);
   }, [q]);
 

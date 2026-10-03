@@ -5,12 +5,11 @@ import { Card } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
+import { listFeePayments } from "@/lib/store";
 import { CLASS_OPTIONS, type ClassValue } from "@/lib/i18n";
 import { MONTHS, currentYear, yearOptions } from "@/lib/months";
 import { format } from "date-fns";
 import { Check, CircleDashed } from "lucide-react";
-import { toast } from "sonner";
 
 export interface StudentViewData {
   id: string;
@@ -51,18 +50,8 @@ export function StudentViewDialog({ student, open, onOpenChange, signedPhoto }: 
 
   useEffect(() => {
     if (!open || !student) return;
-    (async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("student_fee_payments")
-        .select("id,period_year,period_month,amount,paid_at")
-        .eq("student_id", student.id)
-        .order("period_year", { ascending: false })
-        .order("period_month", { ascending: false });
-      setLoading(false);
-      if (error) return toast.error(error.message);
-      setPayments((data ?? []) as Payment[]);
-    })();
+    setLoading(false);
+    setPayments(listFeePayments(student.id));
   }, [open, student?.id]);
 
   if (!student) return null;

@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { addTeacher, updateTeacher, fileToDataUrl } from "@/lib/store";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Required").max(120),
@@ -99,15 +99,7 @@ export function TeacherRegistrationDialog({ trigger, onCreated, teacher, open: o
     setSubmitting(true);
     try {
       let photo_url: string | null | undefined = undefined;
-      if (photoFile) {
-        const ext = photoFile.name.split(".").pop() || "jpg";
-        const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const up = await supabase.storage.from("teacher-photos").upload(path, photoFile, {
-          contentType: photoFile.type, upsert: false,
-        });
-        if (up.error) throw up.error;
-        photo_url = up.data.path;
-      }
+      if (photoFile) photo_url = await fileToDataUrl(photoFile);
       const payload = {
         name: v.name,
         father_name: v.father_name || null,
@@ -120,16 +112,10 @@ export function TeacherRegistrationDialog({ trigger, onCreated, teacher, open: o
         monthly_salary: v.monthly_salary,
       };
       if (isEdit && teacher) {
-        const updatePayload = photo_url !== undefined ? { ...payload, photo_url } : payload;
-        const { error } = await supabase.from("teachers").update(updatePayload).eq("id", teacher.id);
-        if (error) throw error;
-        if (photo_url && teacher.photo_url && teacher.photo_url !== photo_url) {
-          await supabase.storage.from("teacher-photos").remove([teacher.photo_url]);
-        }
+        updateTeacher(teacher.id, photo_url !== undefined ? { ...payload, photo_url } : payload);
         toast.success("Teacher updated");
       } else {
-        const { error } = await supabase.from("teachers").insert({ ...payload, photo_url: photo_url ?? null });
-        if (error) throw error;
+        addTeacher({ ...payload, photo_url: photo_url ?? null });
         toast.success("Teacher registered successfully");
       }
       form.reset();
