@@ -9,58 +9,59 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedDashRouteImport } from './routes/_authenticated/_dash'
-import { Route as AuthenticatedDashFeesRouteImport } from './routes/_authenticated/_dash/fees'
-import { Route as AuthenticatedDashFourRouteImport } from './routes/_authenticated/_dash/four'
-import { Route as AuthenticatedDashHifzRouteImport } from './routes/_authenticated/_dash/hifz'
-import { Route as AuthenticatedDashNurseryRouteImport } from './routes/_authenticated/_dash/nursery'
-import { Route as AuthenticatedDashOneRouteImport } from './routes/_authenticated/_dash/one'
-import { Route as AuthenticatedDashOverviewRouteImport } from './routes/_authenticated/_dash/overview'
-import { Route as AuthenticatedDashPlayRouteImport } from './routes/_authenticated/_dash/play'
-import { Route as AuthenticatedDashSalariesRouteImport } from './routes/_authenticated/_dash/salaries'
-import { Route as AuthenticatedDashTeachersRouteImport } from './routes/_authenticated/_dash/teachers'
-import { Route as AuthenticatedDashThreeRouteImport } from './routes/_authenticated/_dash/three'
 import { Route as AuthenticatedDashTwoRouteImport } from './routes/_authenticated/_dash/two'
+import { Route as AuthenticatedDashThreeRouteImport } from './routes/_authenticated/_dash/three'
+import { Route as AuthenticatedDashTeachersRouteImport } from './routes/_authenticated/_dash/teachers'
+import { Route as AuthenticatedDashSalariesRouteImport } from './routes/_authenticated/_dash/salaries'
+import { Route as AuthenticatedDashPlayRouteImport } from './routes/_authenticated/_dash/play'
+import { Route as AuthenticatedDashOverviewRouteImport } from './routes/_authenticated/_dash/overview'
+import { Route as AuthenticatedDashOneRouteImport } from './routes/_authenticated/_dash/one'
+import { Route as AuthenticatedDashNurseryRouteImport } from './routes/_authenticated/_dash/nursery'
+import { Route as AuthenticatedDashHifzRouteImport } from './routes/_authenticated/_dash/hifz'
+import { Route as AuthenticatedDashFourRouteImport } from './routes/_authenticated/_dash/four'
+import { Route as AuthenticatedDashFeesRouteImport } from './routes/_authenticated/_dash/fees'
 
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedDashRoute = AuthenticatedDashRouteImport.update({
   id: '/_dash',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedDashFeesRoute = AuthenticatedDashFeesRouteImport.update({
-  id: '/fees',
-  path: '/fees',
+const AuthenticatedDashTwoRoute = AuthenticatedDashTwoRouteImport.update({
+  id: '/two',
+  path: '/two',
   getParentRoute: () => AuthenticatedDashRoute,
 } as any)
-const AuthenticatedDashFourRoute = AuthenticatedDashFourRouteImport.update({
-  id: '/four',
-  path: '/four',
+const AuthenticatedDashThreeRoute = AuthenticatedDashThreeRouteImport.update({
+  id: '/three',
+  path: '/three',
   getParentRoute: () => AuthenticatedDashRoute,
 } as any)
-const AuthenticatedDashHifzRoute = AuthenticatedDashHifzRouteImport.update({
-  id: '/hifz',
-  path: '/hifz',
-  getParentRoute: () => AuthenticatedDashRoute,
-} as any)
-const AuthenticatedDashNurseryRoute =
-  AuthenticatedDashNurseryRouteImport.update({
-    id: '/nursery',
-    path: '/nursery',
+const AuthenticatedDashTeachersRoute =
+  AuthenticatedDashTeachersRouteImport.update({
+    id: '/teachers',
+    path: '/teachers',
     getParentRoute: () => AuthenticatedDashRoute,
   } as any)
-const AuthenticatedDashOneRoute = AuthenticatedDashOneRouteImport.update({
-  id: '/one',
-  path: '/one',
+const AuthenticatedDashSalariesRoute =
+  AuthenticatedDashSalariesRouteImport.update({
+    id: '/salaries',
+    path: '/salaries',
+    getParentRoute: () => AuthenticatedDashRoute,
+  } as any)
+const AuthenticatedDashPlayRoute = AuthenticatedDashPlayRouteImport.update({
+  id: '/play',
+  path: '/play',
   getParentRoute: () => AuthenticatedDashRoute,
 } as any)
 const AuthenticatedDashOverviewRoute =
@@ -69,31 +70,30 @@ const AuthenticatedDashOverviewRoute =
     path: '/overview',
     getParentRoute: () => AuthenticatedDashRoute,
   } as any)
-const AuthenticatedDashPlayRoute = AuthenticatedDashPlayRouteImport.update({
-  id: '/play',
-  path: '/play',
+const AuthenticatedDashOneRoute = AuthenticatedDashOneRouteImport.update({
+  id: '/one',
+  path: '/one',
   getParentRoute: () => AuthenticatedDashRoute,
 } as any)
-const AuthenticatedDashSalariesRoute =
-  AuthenticatedDashSalariesRouteImport.update({
-    id: '/salaries',
-    path: '/salaries',
+const AuthenticatedDashNurseryRoute =
+  AuthenticatedDashNurseryRouteImport.update({
+    id: '/nursery',
+    path: '/nursery',
     getParentRoute: () => AuthenticatedDashRoute,
   } as any)
-const AuthenticatedDashTeachersRoute =
-  AuthenticatedDashTeachersRouteImport.update({
-    id: '/teachers',
-    path: '/teachers',
-    getParentRoute: () => AuthenticatedDashRoute,
-  } as any)
-const AuthenticatedDashThreeRoute = AuthenticatedDashThreeRouteImport.update({
-  id: '/three',
-  path: '/three',
+const AuthenticatedDashHifzRoute = AuthenticatedDashHifzRouteImport.update({
+  id: '/hifz',
+  path: '/hifz',
   getParentRoute: () => AuthenticatedDashRoute,
 } as any)
-const AuthenticatedDashTwoRoute = AuthenticatedDashTwoRouteImport.update({
-  id: '/two',
-  path: '/two',
+const AuthenticatedDashFourRoute = AuthenticatedDashFourRouteImport.update({
+  id: '/four',
+  path: '/four',
+  getParentRoute: () => AuthenticatedDashRoute,
+} as any)
+const AuthenticatedDashFeesRoute = AuthenticatedDashFeesRouteImport.update({
+  id: '/fees',
+  path: '/fees',
   getParentRoute: () => AuthenticatedDashRoute,
 } as any)
 
@@ -196,18 +196,18 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/_dash': {
@@ -217,67 +217,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/_dash/fees': {
-      id: '/_authenticated/_dash/fees'
-      path: '/fees'
-      fullPath: '/fees'
-      preLoaderRoute: typeof AuthenticatedDashFeesRouteImport
-      parentRoute: typeof AuthenticatedDashRoute
-    }
-    '/_authenticated/_dash/four': {
-      id: '/_authenticated/_dash/four'
-      path: '/four'
-      fullPath: '/four'
-      preLoaderRoute: typeof AuthenticatedDashFourRouteImport
-      parentRoute: typeof AuthenticatedDashRoute
-    }
-    '/_authenticated/_dash/hifz': {
-      id: '/_authenticated/_dash/hifz'
-      path: '/hifz'
-      fullPath: '/hifz'
-      preLoaderRoute: typeof AuthenticatedDashHifzRouteImport
-      parentRoute: typeof AuthenticatedDashRoute
-    }
-    '/_authenticated/_dash/nursery': {
-      id: '/_authenticated/_dash/nursery'
-      path: '/nursery'
-      fullPath: '/nursery'
-      preLoaderRoute: typeof AuthenticatedDashNurseryRouteImport
-      parentRoute: typeof AuthenticatedDashRoute
-    }
-    '/_authenticated/_dash/one': {
-      id: '/_authenticated/_dash/one'
-      path: '/one'
-      fullPath: '/one'
-      preLoaderRoute: typeof AuthenticatedDashOneRouteImport
-      parentRoute: typeof AuthenticatedDashRoute
-    }
-    '/_authenticated/_dash/overview': {
-      id: '/_authenticated/_dash/overview'
-      path: '/overview'
-      fullPath: '/overview'
-      preLoaderRoute: typeof AuthenticatedDashOverviewRouteImport
-      parentRoute: typeof AuthenticatedDashRoute
-    }
-    '/_authenticated/_dash/play': {
-      id: '/_authenticated/_dash/play'
-      path: '/play'
-      fullPath: '/play'
-      preLoaderRoute: typeof AuthenticatedDashPlayRouteImport
-      parentRoute: typeof AuthenticatedDashRoute
-    }
-    '/_authenticated/_dash/salaries': {
-      id: '/_authenticated/_dash/salaries'
-      path: '/salaries'
-      fullPath: '/salaries'
-      preLoaderRoute: typeof AuthenticatedDashSalariesRouteImport
-      parentRoute: typeof AuthenticatedDashRoute
-    }
-    '/_authenticated/_dash/teachers': {
-      id: '/_authenticated/_dash/teachers'
-      path: '/teachers'
-      fullPath: '/teachers'
-      preLoaderRoute: typeof AuthenticatedDashTeachersRouteImport
+    '/_authenticated/_dash/two': {
+      id: '/_authenticated/_dash/two'
+      path: '/two'
+      fullPath: '/two'
+      preLoaderRoute: typeof AuthenticatedDashTwoRouteImport
       parentRoute: typeof AuthenticatedDashRoute
     }
     '/_authenticated/_dash/three': {
@@ -287,11 +231,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashThreeRouteImport
       parentRoute: typeof AuthenticatedDashRoute
     }
-    '/_authenticated/_dash/two': {
-      id: '/_authenticated/_dash/two'
-      path: '/two'
-      fullPath: '/two'
-      preLoaderRoute: typeof AuthenticatedDashTwoRouteImport
+    '/_authenticated/_dash/teachers': {
+      id: '/_authenticated/_dash/teachers'
+      path: '/teachers'
+      fullPath: '/teachers'
+      preLoaderRoute: typeof AuthenticatedDashTeachersRouteImport
+      parentRoute: typeof AuthenticatedDashRoute
+    }
+    '/_authenticated/_dash/salaries': {
+      id: '/_authenticated/_dash/salaries'
+      path: '/salaries'
+      fullPath: '/salaries'
+      preLoaderRoute: typeof AuthenticatedDashSalariesRouteImport
+      parentRoute: typeof AuthenticatedDashRoute
+    }
+    '/_authenticated/_dash/play': {
+      id: '/_authenticated/_dash/play'
+      path: '/play'
+      fullPath: '/play'
+      preLoaderRoute: typeof AuthenticatedDashPlayRouteImport
+      parentRoute: typeof AuthenticatedDashRoute
+    }
+    '/_authenticated/_dash/overview': {
+      id: '/_authenticated/_dash/overview'
+      path: '/overview'
+      fullPath: '/overview'
+      preLoaderRoute: typeof AuthenticatedDashOverviewRouteImport
+      parentRoute: typeof AuthenticatedDashRoute
+    }
+    '/_authenticated/_dash/one': {
+      id: '/_authenticated/_dash/one'
+      path: '/one'
+      fullPath: '/one'
+      preLoaderRoute: typeof AuthenticatedDashOneRouteImport
+      parentRoute: typeof AuthenticatedDashRoute
+    }
+    '/_authenticated/_dash/nursery': {
+      id: '/_authenticated/_dash/nursery'
+      path: '/nursery'
+      fullPath: '/nursery'
+      preLoaderRoute: typeof AuthenticatedDashNurseryRouteImport
+      parentRoute: typeof AuthenticatedDashRoute
+    }
+    '/_authenticated/_dash/hifz': {
+      id: '/_authenticated/_dash/hifz'
+      path: '/hifz'
+      fullPath: '/hifz'
+      preLoaderRoute: typeof AuthenticatedDashHifzRouteImport
+      parentRoute: typeof AuthenticatedDashRoute
+    }
+    '/_authenticated/_dash/four': {
+      id: '/_authenticated/_dash/four'
+      path: '/four'
+      fullPath: '/four'
+      preLoaderRoute: typeof AuthenticatedDashFourRouteImport
+      parentRoute: typeof AuthenticatedDashRoute
+    }
+    '/_authenticated/_dash/fees': {
+      id: '/_authenticated/_dash/fees'
+      path: '/fees'
+      fullPath: '/fees'
+      preLoaderRoute: typeof AuthenticatedDashFeesRouteImport
       parentRoute: typeof AuthenticatedDashRoute
     }
   }
